@@ -9,5 +9,9 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="MyGame3.Avalonia" Background="Transparent">
-
+	<Button Background="Black">
+		<Button.Content>
+			<TextBlock Text="Hello, Avalonia!" />
+		</Button.Content>
+	</Button>
 </Window>
