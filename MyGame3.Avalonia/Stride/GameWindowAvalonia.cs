@@ -92,7 +92,7 @@ public class GameWindowAvalonia : GameWindow<Control>
 		}
 	}
 
-	public override Rectangle ClientBounds { get; }
+	public override Rectangle ClientBounds { get => new Rectangle(0, 0, (int)control.Bounds.Right, (int)control.Bounds.Bottom); }
 	public override DisplayOrientation CurrentOrientation { get; }
 	public override bool IsMinimized { get; }
 	public override bool Focused { get; }
@@ -247,7 +247,11 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	public override void Resize(int width, int height)
 	{
-		throw new NotImplementedException();
+		if (control.GetVisualRoot() is Window window)
+		{
+			window.Width = width;
+			window.Height = height;
+		}
 	}
 
 	public override void SetSupportedOrientations(DisplayOrientation orientations)

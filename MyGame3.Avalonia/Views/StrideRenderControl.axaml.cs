@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using MyGame3.Avalonia.Stride;
 using Stride.Games;
 using System;
@@ -16,15 +17,21 @@ public partial class StrideRenderControl : UserControl
 	{
 		Initialized += OnInitialized;
 		DetachedFromVisualTree += OnDetachedFromVisualTree;
+		Loaded += OnLoaded;
 	}
 
-    private void OnInitialized(object sender, EventArgs e)
+	private void OnLoaded(object? sender, RoutedEventArgs e)
 	{
 		gameWindow = new GameWindowAvalonia(this);
 
 		game = new AvaloniaGame();
 
 		game.Run(gameWindow.GameContext);
+	}
+
+	private void OnInitialized(object sender, EventArgs e)
+	{
+
 	}
 
 	private void OnDetachedFromVisualTree(object sender, VisualTreeAttachmentEventArgs e)
