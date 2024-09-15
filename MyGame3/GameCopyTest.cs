@@ -292,6 +292,13 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 		}
 	}
 
+	protected override void BeginRun()
+	{
+		base.BeginRun();
+		// TODO: This is a temporary workaround to avoid low FPS until I manage window focus events.
+		MinimizedMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(1000f / 120);
+	}
+
 	public override void ConfirmRenderingSettings(bool gameCreation)
 	{
 		if (!AutoLoadDefaultSettings) return;
