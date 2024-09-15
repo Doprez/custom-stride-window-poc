@@ -192,10 +192,10 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	private void OnPropertyChanged(object sender, AvaloniaPropertyChangedEventArgs e)
 	{
-		//if (e.Property == control.BoundsProperty)
-		//{
-		//	OnClientSizeChanged();
-		//}
+		if (e.Property == Control.BoundsProperty)
+		{
+			OnClientSizeChanged(control, null);
+		}
 	}
 
 	private void StartRendering()
@@ -212,7 +212,6 @@ public class GameWindowAvalonia : GameWindow<Control>
 	{
 		renderTimer?.Stop();
 		renderTimer = null;
-		Destroy();
 	}
 
 	private void Render()
@@ -241,7 +240,6 @@ public class GameWindowAvalonia : GameWindow<Control>
 	{
 		StopRendering();
 
-		// Dispose of graphics resources if needed
 		ExitCallback?.Invoke();
 	}
 
