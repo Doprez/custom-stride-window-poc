@@ -89,52 +89,6 @@ public class AvaloniaGame : GameBase, ISceneRendererContext, IGameSettingsServic
 	/// </summary>
 	public GameProfilingSystem ProfilingSystem { get; }
 
-	public AvaloniaGame() : base()
-	{
-		gamePlatform = new GamePlatformAvalonia(this);
-
-		gamePlatform.Activated += GamePlatform_Activated;
-		gamePlatform.Deactivated += GamePlatform_Deactivated;
-		gamePlatform.Exiting += GamePlatform_Exiting;
-		gamePlatform.WindowCreated += GamePlatformOnWindowCreated;
-
-		Services.AddService<IGraphicsDeviceFactory>(gamePlatform);
-		Services.AddService<IGamePlatform>(gamePlatform);
-
-
-		// Create all core services, except Input which is created during `Initialize'.
-		// Registration takes place in `Initialize'.
-		Script = new ScriptSystem(Services);
-		Services.AddService(Script);
-
-		SceneSystem = new SceneSystem(Services);
-		Services.AddService(SceneSystem);
-
-		Streaming = new StreamingManager(Services);
-
-		Audio = new AudioSystem(Services);
-		Services.AddService(Audio);
-		Services.AddService<IAudioEngineProvider>(Audio);
-
-		gameFontSystem = new GameFontSystem(Services);
-		Services.AddService(gameFontSystem.FontSystem);
-		Services.AddService<IFontFactory>(gameFontSystem.FontSystem);
-
-		SpriteAnimation = new SpriteAnimationSystem(Services);
-		Services.AddService(SpriteAnimation);
-
-		DebugTextSystem = new DebugTextSystem(Services);
-		Services.AddService(DebugTextSystem);
-
-		ProfilingSystem = new GameProfilingSystem(Services);
-		Services.AddService(ProfilingSystem);
-
-		// Creates the graphics device manager
-		GraphicsDeviceManager = new GraphicsDeviceManager(this);
-		Services.AddService<IGraphicsDeviceManager>(GraphicsDeviceManager);
-		Services.AddService<IGraphicsDeviceService>(GraphicsDeviceManager);
-	}
-
 	/// <summary>
 	/// Initializes a new instance of the <see cref="CustomDesktopGame"/> class.
 	/// </summary>

@@ -23,8 +23,9 @@ public partial class StrideRenderControl : UserControl
 	private void OnLoaded(object? sender, RoutedEventArgs e)
 	{
 		gameWindow = new GameWindowAvalonia(this);
+		gamePlatform = new GamePlatformAvalonia();
 
-		game = new AvaloniaGame();
+		game = new AvaloniaGame(gamePlatform);
 
 		game.Run(gameWindow.GameContext);
 	}

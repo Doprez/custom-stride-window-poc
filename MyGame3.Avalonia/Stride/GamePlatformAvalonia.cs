@@ -9,8 +9,8 @@ namespace Stride.Games
 
 		private bool hasExitRan = false;
 
-		public GamePlatformAvalonia(GameBase game)
-			: base(game)
+		public GamePlatformAvalonia()
+			: base()
 		{
 			IsBlockingRun = false; // Avalonia manages its own event loop
 		}
@@ -19,6 +19,7 @@ namespace Stride.Games
 
 		public override GameWindow CreateWindow(GameContext gameContext)
 		{
+			var test = gameWindow;
 			if(gameContext is GameContextAvalonia avaloniaContext)
 			{
 				return new GameWindowAvalonia(avaloniaContext.Control);
@@ -30,7 +31,7 @@ namespace Stride.Games
 		public override GameWindow GetSupportedGameWindow(AppContextType contextType)
 		{
 			// I dont currently care about the context type but I might in the future
-			return new GameWindowAvalonia(null);
+			return null;
 		}
 
 		public new void Run(GameContext gameContext)
