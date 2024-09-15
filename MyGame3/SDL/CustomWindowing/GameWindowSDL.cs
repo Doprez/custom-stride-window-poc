@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
 using Silk.NET.SDL;
 using Stride.Core.Mathematics;
 using Stride.Games;
 using Stride.Graphics;
-using Stride.Graphics.SDL;
-using Cursor = MyGame3.SDL.Cursor;
 using DisplayOrientation = Stride.Graphics.DisplayOrientation;
 using Point = Stride.Core.Mathematics.Point;
 using Window = MyGame3.SDL.SDLWindow;
 using FormBorderStyle = MyGame3.SDL.Enums.FormBorderStyle;
 using FormWindowState = MyGame3.SDL.Enums.FormWindowState;
-using System.Windows.Forms;
 
 namespace MyGame3.SDL.CustomWindowing;
 
@@ -59,8 +55,7 @@ public class GameWindowSDL : GameWindow<Window>
 		window.MouseEnterActions += WindowOnMouseEnterActions;
 		window.MouseLeaveActions += WindowOnMouseLeaveActions;
 
-		var gameForm = window as GameFormSDL;
-		if (gameForm != null)
+		if (window is GameFormSDL gameForm)
 		{
 			//gameForm.AppActivated += OnActivated;
 			//gameForm.AppDeactivated += OnDeactivated;
@@ -154,15 +149,13 @@ public class GameWindowSDL : GameWindow<Window>
 		window.MouseEnterActions += WindowOnMouseEnterActions;
 		window.MouseLeaveActions += WindowOnMouseLeaveActions;
 
-		var gameForm = window as GameFormSDL;
-		if (gameForm != null)
+		if (window is GameFormSDL gameForm)
 		{
 			//gameForm.AppActivated += OnActivated;
 			//gameForm.AppDeactivated += OnDeactivated;
 			gameForm.UserResized += OnClientSizeChanged;
 			gameForm.CloseActions += GameForm_CloseActions;
 			gameForm.FullscreenToggle += OnFullscreenToggle;
-
 		}
 		else
 		{
@@ -202,7 +195,6 @@ public class GameWindowSDL : GameWindow<Window>
 						Destroy();
 						return;
 					}
-
 					runCallback();
 				});
 			}
