@@ -11,5 +11,9 @@
     <PackageReference Include="Stride.Particles" Version="4.2.0.1" />
     <PackageReference Include="Stride.UI" Version="4.2.0.1" />
     <PackageReference Include="Stride.Core.Assets.CompilerApp" Version="4.2.0.1" IncludeAssets="build;buildTransitive" />
+	  <PackageReference Include="Avalonia" Version="11.1.3" />
+	  <PackageReference Include="Avalonia.Desktop" Version="11.1.3" />
+	  <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.3" />
+	  <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.3" />
   </ItemGroup>
 </Project>

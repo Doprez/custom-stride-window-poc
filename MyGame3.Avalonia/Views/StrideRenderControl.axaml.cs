@@ -11,7 +11,7 @@ public partial class StrideRenderControl : UserControl
 
 	private GamePlatformAvalonia gamePlatform;
 	private GameWindow<Control> gameWindow;
-	private AvaloniaGame game;
+	private GameBase game;
 
 	public StrideRenderControl()
 	{
@@ -25,7 +25,7 @@ public partial class StrideRenderControl : UserControl
 		gameWindow = new GameWindowAvalonia(this);
 		gamePlatform = new GamePlatformAvalonia();
 
-		game = new AvaloniaGame(gamePlatform);
+		game = new GameCopyTest(gamePlatform);
 
 		game.Run(gameWindow.GameContext);
 	}

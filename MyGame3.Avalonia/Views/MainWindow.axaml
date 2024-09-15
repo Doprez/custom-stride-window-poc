@@ -8,10 +8,8 @@
         x:Class="MyGame3.Avalonia.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="MyGame3.Avalonia">
+        Title="MyGame3.Avalonia" Background="Transparent">
 
-	<Grid>
-		<avalonia:StrideRenderControl />
-	</Grid>
+
 
 </Window>

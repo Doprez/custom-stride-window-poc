@@ -8,27 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.1.3" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.1.3" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.3" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.3" />
+	<PackageReference Include="Stride.Core.Assets.CompilerApp" Version="4.2.0.1" IncludeAssets="build;buildTransitive" />
   </ItemGroup>
 
 
   <ItemGroup>
     <ProjectReference Include="..\MyGame3\MyGame3.csproj" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Compile Update="Views\StrideRenderControl.axaml.cs">
-      <DependentUpon>StrideRenderControl.axaml</DependentUpon>
-    </Compile>
   </ItemGroup>
 </Project>

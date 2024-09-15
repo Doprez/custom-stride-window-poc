@@ -21,6 +21,5 @@ public class MoveTest : SyncScript
 		// Do stuff every new frame
 		Entity.Transform.Position.X += 0.01f;
 		Physics.UpdatePhysicsTransformation();
-
 	}
 }

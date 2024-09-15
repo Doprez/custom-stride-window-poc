@@ -23,8 +23,8 @@ using Stride.Shaders.Compiler;
 using Stride.Streaming;
 using Stride.VirtualReality;
 
-namespace MyGame3.Avalonia.Stride;
-public class AvaloniaGame : GameBase, ISceneRendererContext, IGameSettingsService
+namespace MyGame3;
+public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsService
 {
 	/// <summary>
 	/// Static event that will be fired when a game is initialized
@@ -182,7 +182,7 @@ public class AvaloniaGame : GameBase, ISceneRendererContext, IGameSettingsServic
 	/// <summary>
 	/// Initializes a new instance of the <see cref="Game"/> class.
 	/// </summary>
-	public AvaloniaGame(GamePlatform gamePlatform) : base(gamePlatform)
+	public GameCopyTest(GamePlatform gamePlatform) : base(gamePlatform)
 	{
 		// Register the logger backend before anything else
 		logListener = GetLogListener();
@@ -457,12 +457,12 @@ public class AvaloniaGame : GameBase, ISceneRendererContext, IGameSettingsServic
 		return new ConsoleLogListener();
 	}
 
-	private static void OnGameStarted(AvaloniaGame game)
+	private static void OnGameStarted(GameCopyTest game)
 	{
 		GameStarted?.Invoke(game, null);
 	}
 
-	private static void OnGameDestroyed(AvaloniaGame game)
+	private static void OnGameDestroyed(GameCopyTest game)
 	{
 		GameDestroyed?.Invoke(game, null);
 	}
