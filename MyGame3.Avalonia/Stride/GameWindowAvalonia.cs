@@ -6,6 +6,7 @@ using Avalonia.VisualTree;
 using Stride.Core.Mathematics;
 using Stride.Games;
 using Stride.Graphics;
+using Stride.Rendering.Lights;
 using System;
 using Point = Stride.Core.Mathematics.Point;
 
@@ -259,6 +260,9 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	protected override void SetTitle(string title)
 	{
-		var test = control.GetVisualRoot();
+		if (control.GetVisualRoot() is Window window)
+		{
+			window.Title = title;
+		}
 	}
 }
