@@ -8,8 +8,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MinimalGame.Windows", "Mini
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyGame3.Avalonia", "MyGame3.Avalonia\MyGame3.Avalonia.csproj", "{236ED9DB-A9C7-4814-B914-C6F50232A127}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyGame3.CustomPlatform", "MyGame3.CustomPlatform\MyGame3.CustomPlatform.csproj", "{D30D91C0-1C3A-4D06-8D2C-1A1CBB78733F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,10 +26,6 @@ Global
 		{236ED9DB-A9C7-4814-B914-C6F50232A127}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{236ED9DB-A9C7-4814-B914-C6F50232A127}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{236ED9DB-A9C7-4814-B914-C6F50232A127}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D30D91C0-1C3A-4D06-8D2C-1A1CBB78733F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D30D91C0-1C3A-4D06-8D2C-1A1CBB78733F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D30D91C0-1C3A-4D06-8D2C-1A1CBB78733F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D30D91C0-1C3A-4D06-8D2C-1A1CBB78733F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
