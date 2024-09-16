@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using MyGame3.MouseHelpers;
+using Silk.NET.SDL;
 using Stride.Core.Mathematics;
 using Stride.Input;
 using MouseButton = Stride.Input.MouseButton;
@@ -15,10 +18,15 @@ namespace MyGame3.Avalonia.Input
         private readonly Control uiControl;
         private bool isMousePositionLocked;
         private Point previousPosition;
+        private Sdl sdl;
 
-        public MouseAvalonia(InputSourceAvalonia source, Control uiControl)
+		private Point relativeCapturedPosition;
+
+		public MouseAvalonia(InputSourceAvalonia source, Control uiControl, Sdl sdl)
         {
-            Source = source;
+            this.sdl = sdl;
+
+			Source = source;
             this.uiControl = uiControl;
 
             // Subscribe to mouse events
@@ -52,21 +60,53 @@ namespace MyGame3.Avalonia.Input
         }
 
         public override void LockPosition(bool forceCenter = false)
-        {
+		{
+			if (!IsPositionLocked)
+			{
+				if (forceCenter)
+				{
+					relativeCapturedPosition = new Point((int)uiControl.Bounds.Width / 2, (int)uiControl.Bounds.Height / 2);
+				}
+				else
+				{
+                    
+					relativeCapturedPosition = MouseHelper.GetCursorPosition();
+				}
 
+				isMousePositionLocked = true;
+			}
 		}
 
         public override void UnlockPosition()
-        {
-
-        }
+		{
+			if (IsPositionLocked)
+			{
+                MouseHelper.SetCursorPosition(relativeCapturedPosition.X, relativeCapturedPosition.Y);
+				isMousePositionLocked = false;
+				relativeCapturedPosition = Point.Zero;
+			}
+		}
 
         public override void SetPosition(Vector2 normalizedPosition)
         {
 
         }
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+		public override void Update(List<InputEvent> inputEvents)
+		{
+			base.Update(inputEvents);
+
+			// update mouse position if it is locked and the relative position has changed
+			if (IsPositionLocked)
+			{
+				var currentRelativePosition = MouseHelper.GetCursorPosition();
+				var delta = new Vector2(currentRelativePosition.X - relativeCapturedPosition.X, currentRelativePosition.Y - relativeCapturedPosition.Y);
+				MouseState.HandleMouseDelta(delta);
+                MouseHelper.SetCursorPosition(relativeCapturedPosition.X, relativeCapturedPosition.Y);
+			}
+		}
+
+		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             SetSurfaceSize(new Vector2((float)uiControl.Bounds.Width, (float)uiControl.Bounds.Height));
         }
