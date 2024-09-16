@@ -96,7 +96,13 @@ public class GameWindowAvalonia : GameWindow<Control>
 	public override Rectangle ClientBounds { get => new Rectangle(0, 0, (int)control.Bounds.Right, (int)control.Bounds.Bottom); }
 	public override DisplayOrientation CurrentOrientation { get; }
 	public override bool IsMinimized { get; }
-	public override bool Focused { get; }
+	public override bool Focused
+	{ 
+		get
+		{
+			return control.IsFocused;
+		} 
+	}
 	public override WindowHandle NativeWindow { get => windowHandle; }
 
 	private Control control;
