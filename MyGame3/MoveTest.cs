@@ -1,4 +1,5 @@
-﻿using Stride.Engine;
+﻿using Stride.Core.Mathematics;
+using Stride.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,15 +19,14 @@ public class MoveTest : SyncScript
 
 	public override void Update()
 	{
+		DebugText.Print($"FPS: {Game.UpdateTime.FramePerSecond}", new Int2(10, 10));
+
 		// Do stuff every new frame
 		Entity.Transform.Position.X += 0.01f;
 		Physics.UpdatePhysicsTransformation();
 
 		if(Input.IsKeyPressed(Stride.Input.Keys.Tab))
 		{
-			GraphicsDevice.Presenter.IsFullScreen = true;
-			//Game.Window.Visible = false;
-			//Game.Window.IsFullscreen = true;
 			//Game.Window.SetBorderlessWindowFullScreen(!Game.Window.FullscreenIsBorderlessWindow);
 		}
 	}

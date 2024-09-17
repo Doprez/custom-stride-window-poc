@@ -15,6 +15,8 @@ public partial class MainWindow : Window
 	private GameWindow<Control> gameWindow;
 	private GameBase game;
 
+	private StrideGameRunner gameRunner;
+
 	public MainWindow()
 	{
 		InitializeComponent();
@@ -28,6 +30,7 @@ public partial class MainWindow : Window
 		gamePlatform = new GamePlatformAvalonia();
 		game = new AvaloniaCustomGame(gamePlatform, gameWindow.GameContext.Control);
 
+		//gameRunner = new StrideGameRunner(game, gameWindow.GameContext);
 		game.Run(gameWindow.GameContext);
 	}
 }

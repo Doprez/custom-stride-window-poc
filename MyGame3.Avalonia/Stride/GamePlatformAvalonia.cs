@@ -35,8 +35,6 @@ namespace Stride.Games
 
 		public new void Run(GameContext gameContext)
 		{
-			IsBlockingRun = !gameContext.IsUserManagingRun;
-
 			gameWindow = CreateWindow(gameContext);
 
 			// Register event handlers

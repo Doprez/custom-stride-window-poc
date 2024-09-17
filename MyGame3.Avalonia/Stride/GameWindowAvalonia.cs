@@ -59,7 +59,10 @@ public class GameWindowAvalonia : GameWindow<Control>
 				isMouseVisible = value;
 				if (control.GetVisualRoot() is Window window)
 				{
-					window.Cursor = isMouseVisible ? new Cursor(StandardCursorType.Arrow) : new Cursor(StandardCursorType.None);
+					Dispatcher.UIThread.Post(() =>
+					{
+						window.Cursor = isMouseVisible ? new Cursor(StandardCursorType.Arrow) : new Cursor(StandardCursorType.None);
+					});
 				}
 			}
 		}
@@ -287,10 +290,8 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	private void StartRendering()
 	{
-		renderTimer = new DispatcherTimer
-		{
-			Interval = TimeSpan.FromMilliseconds(16) // Approx. 60 FPS
-		};
+		renderTimer = new DispatcherTimer();
+		
 		renderTimer.Tick += (s, e) => Render();
 		renderTimer.Start();
 	}
@@ -334,8 +335,11 @@ public class GameWindowAvalonia : GameWindow<Control>
 	{
 		if (control.GetVisualRoot() is Window window)
 		{
-			window.Width = width;
-			window.Height = height;
+			Dispatcher.UIThread.Post(() =>
+			{
+				window.Width = width;
+				window.Height = height;
+			});
 		}
 	}
 
