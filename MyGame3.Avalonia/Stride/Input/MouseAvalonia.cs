@@ -92,20 +92,6 @@ namespace MyGame3.Avalonia.Input
 
         }
 
-		public override void Update(List<InputEvent> inputEvents)
-		{
-			base.Update(inputEvents);
-
-			// update mouse position if it is locked and the relative position has changed
-			if (IsPositionLocked)
-			{
-				var currentRelativePosition = MouseHelper.GetCursorPosition();
-				var delta = new Vector2(currentRelativePosition.X - relativeCapturedPosition.X, currentRelativePosition.Y - relativeCapturedPosition.Y);
-				MouseState.HandleMouseDelta(delta);
-                MouseHelper.SetCursorPosition(relativeCapturedPosition.X, relativeCapturedPosition.Y);
-			}
-		}
-
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             SetSurfaceSize(new Vector2((float)uiControl.Bounds.Width, (float)uiControl.Bounds.Height));
@@ -137,17 +123,12 @@ namespace MyGame3.Avalonia.Input
             var position = e.GetCurrentPoint(uiControl).Position;
 
             if (IsPositionLocked)
-            {
-                // Calculate delta movement
-                var deltaX = (float)(position.X - previousPosition.X);
-                var deltaY = (float)(position.Y - previousPosition.Y);
-                MouseState.HandleMouseDelta(new Vector2(deltaX, deltaY));
-
-                // Update previous position
-                previousPosition = new Point((int)position.X, (int)position.Y);
-
-                // Note: Resetting the cursor position is not possible in Avalonia without platform-specific code
-            }
+			{
+				var currentRelativePosition = MouseHelper.GetCursorPosition();
+				var delta = new Vector2(currentRelativePosition.X - relativeCapturedPosition.X, currentRelativePosition.Y - relativeCapturedPosition.Y);
+				MouseState.HandleMouseDelta(delta);
+				MouseHelper.SetCursorPosition(relativeCapturedPosition.X, relativeCapturedPosition.Y);
+			}
             else
             {
                 // Update mouse position
