@@ -12,14 +12,13 @@ namespace Stride.Games
 		public GamePlatformAvalonia()
 			: base()
 		{
-			IsBlockingRun = false; // Avalonia manages its own event loop
+
 		}
 
 		public override string DefaultAppDirectory => AppDomain.CurrentDomain.BaseDirectory;
 
 		public override GameWindow CreateWindow(GameContext gameContext)
 		{
-			var test = gameWindow;
 			if(gameContext is GameContextAvalonia avaloniaContext)
 			{
 				return new GameWindowAvalonia(avaloniaContext.Control);

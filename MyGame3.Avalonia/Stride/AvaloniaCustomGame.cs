@@ -1,6 +1,8 @@
 ﻿using Avalonia.Controls;
 using MyGame3.Avalonia.Input;
+using Stride.Engine;
 using Stride.Games;
+using Stride.Graphics;
 using Stride.Input;
 using System;
 using System.Collections.Generic;
@@ -31,7 +33,6 @@ public class AvaloniaCustomGame : GameCopyTest
 	protected override void BeginRun()
 	{
 		base.BeginRun();
-		// TODO: This is a temporary workaround to avoid low FPS until I manage window focus events.
-		MinimizedMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(1000f / 120);
+		GraphicsDevice.Presenter.PresentInterval = PresentInterval.Immediate;
 	}
 }

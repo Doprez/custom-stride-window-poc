@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -94,12 +95,27 @@ public class GameWindowAvalonia : GameWindow<Control>
 	}
 
 	public override Rectangle ClientBounds { get => new Rectangle(0, 0, (int)control.Bounds.Right, (int)control.Bounds.Bottom); }
-	public override DisplayOrientation CurrentOrientation { get; }
-	public override bool IsMinimized { get; }
+	public override DisplayOrientation CurrentOrientation { get => DisplayOrientation.Default; }
+	public override bool IsMinimized
+	{
+		get
+		{
+			if (control.GetVisualRoot() is Window window)
+			{
+				return window.WindowState.Equals(WindowState.Minimized);
+			}
+			return false;
+		}
+	}
+
 	public override bool Focused
 	{ 
 		get
 		{
+			if (control.GetVisualRoot() is Window window)
+			{
+				return window.IsActive;
+			}
 			return control.IsFocused;
 		} 
 	}
@@ -134,9 +150,77 @@ public class GameWindowAvalonia : GameWindow<Control>
 		// we don't need to implement a custom message loop here.
 	}
 
+	private WindowState savedWindowState;
+	private Size lastClientSize;
+	private PixelPoint lastClientPos;
+
+	public override void SetBorderlessWindowFullScreen(bool borderlessFullScreen)
+	{
+		FullscreenIsBorderlessWindow = borderlessFullScreen;
+		if (borderlessFullScreen)
+		{
+			if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+			{
+				var size = desktop.MainWindow.Screens.Primary.Bounds.Size;
+				if (control.GetVisualRoot() is Window window)
+				{
+					lastClientPos = window.Position;
+					window.SystemDecorations = SystemDecorations.None;
+					savedWindowState = window.WindowState;
+					window.WindowState = WindowState.FullScreen;
+					window.Position = new PixelPoint(0, 0);
+					lastClientSize = window.ClientSize;
+					SetSize(new Int2(size.Width, size.Height));
+					window.Topmost = true;
+				}
+			}
+		}
+		else
+		{
+			if (control.GetVisualRoot() is Window window)
+			{
+				window.SystemDecorations = SystemDecorations.Full;
+				window.Position = lastClientPos;
+				window.Width = lastClientSize.Width;
+				window.Height = lastClientSize.Height;
+				window.WindowState = savedWindowState;
+			}
+		}
+	}
+
+	private SystemDecorations savedFormBorderStyle;
+	private bool oldVisible;
+	private bool deviceChangeChangedVisible;
+
 	public override void BeginScreenDeviceChange(bool willBeFullScreen)
 	{
-		deviceChangeWillBeFullScreen = willBeFullScreen;
+		if (control.GetVisualRoot() is Window window)
+		{
+			if (willBeFullScreen && !isFullScreenMaximized)
+			{
+				savedFormBorderStyle = window.SystemDecorations;
+			}
+
+			if (willBeFullScreen != isFullScreenMaximized)
+			{
+				deviceChangeChangedVisible = true;
+				oldVisible = Visible;
+				Visible = false;
+				window.Topmost = false;
+			}
+			else
+			{
+				deviceChangeChangedVisible = false;
+			}
+
+			if (!willBeFullScreen && isFullScreenMaximized)
+			{
+				window.Topmost = false;
+				window.SystemDecorations = savedFormBorderStyle;
+			}
+
+			deviceChangeWillBeFullScreen = willBeFullScreen;
+		}
 	}
 
 	public override void EndScreenDeviceChange(int clientWidth, int clientHeight)
@@ -144,31 +228,27 @@ public class GameWindowAvalonia : GameWindow<Control>
 		if (!deviceChangeWillBeFullScreen.HasValue)
 			return;
 
-		isFullScreenMaximized = deviceChangeWillBeFullScreen.Value;
-
-		if (control != null)
+		if (control.GetVisualRoot() is Window window)
 		{
 			if (deviceChangeWillBeFullScreen.Value)
 			{
-				// Switch to full-screen mode
-				if (control.GetVisualRoot() is Window window)
-				{
-					window.WindowState = WindowState.FullScreen;
-				}
+				isFullScreenMaximized = true;
 			}
-			else
+			else if (isFullScreenMaximized)
 			{
-				// Switch to windowed mode
-				if (control.GetVisualRoot() is Window window)
-				{
-					window.WindowState = WindowState.Normal;
-					window.Width = clientWidth;
-					window.Height = clientHeight;
-				}
+				window.Topmost = true;
+				isFullScreenMaximized = false;
 			}
-		}
 
-		deviceChangeWillBeFullScreen = null;
+			//UpdateFormBorder();
+
+			if (deviceChangeChangedVisible)
+				Visible = oldVisible;
+
+			//window.ClientSize = new Size(clientWidth, clientHeight);
+
+			deviceChangeWillBeFullScreen = null;
+		}
 	}
 
 	protected override void Initialize(GameContext<Control> gameContext)

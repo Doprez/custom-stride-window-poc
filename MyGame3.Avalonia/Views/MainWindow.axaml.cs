@@ -6,6 +6,7 @@ using Stride.Engine;
 using Stride.Games;
 using Stride.Input;
 using System;
+using System.Threading.Tasks;
 
 namespace MyGame3.Avalonia.Views;
 public partial class MainWindow : Window
@@ -26,12 +27,6 @@ public partial class MainWindow : Window
 		gameWindow = new GameWindowAvalonia(this);
 		gamePlatform = new GamePlatformAvalonia();
 		game = new AvaloniaCustomGame(gamePlatform, gameWindow.GameContext.Control);
-
-		//var input = game.Services.GetService<InputManager>();
-		//// I could just use "this" as the control but I want to be clear that I am using
-		//// the control from the GameContext.
-		//var avaloniaInput = new InputSourceAvalonia(gameWindow.GameContext.Control);
-		//input.Sources.Add(avaloniaInput);
 
 		game.Run(gameWindow.GameContext);
 	}
