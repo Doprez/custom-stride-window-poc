@@ -7,7 +7,6 @@ using Avalonia.VisualTree;
 using Stride.Core.Mathematics;
 using Stride.Games;
 using Stride.Graphics;
-using Stride.Rendering.Lights;
 using System;
 using Point = Stride.Core.Mathematics.Point;
 
@@ -17,7 +16,14 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	public override bool Visible
 	{
-		get => (control.GetVisualRoot() as Window)?.IsVisible ?? false;
+		get
+		{
+			//return Dispatcher.UIThread.Invoke(() =>
+			//{
+			//	return (control.GetVisualRoot() as Window)?.IsVisible ?? false;
+			//});
+			return (control.GetVisualRoot() as Window)?.IsVisible ?? false;
+		}
 		set
 		{
 			if (control.GetVisualRoot() is Window window)
@@ -105,6 +111,11 @@ public class GameWindowAvalonia : GameWindow<Control>
 		{
 			if (control.GetVisualRoot() is Window window)
 			{
+				// If UI is running in another thread, use this instead
+				//return Dispatcher.UIThread.Invoke(() =>
+				//{
+				//	return window.WindowState.Equals(WindowState.FullScreen);
+				//});
 				return window.WindowState.Equals(WindowState.Minimized);
 			}
 			return false;
@@ -263,8 +274,8 @@ public class GameWindowAvalonia : GameWindow<Control>
 		windowHandle = new WindowHandle(AppContextType.Desktop, control, nativeHandle);
 
 		// Subscribe to control events
-		control.AttachedToVisualTree += OnAttachedToVisualTree;
-		control.DetachedFromVisualTree += OnDetachedFromVisualTree;
+		//control.AttachedToVisualTree += OnAttachedToVisualTree;
+		//control.DetachedFromVisualTree += OnDetachedFromVisualTree;
 		control.PropertyChanged += OnPropertyChanged;
 	}
 
@@ -290,7 +301,10 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	private void StartRendering()
 	{
-		renderTimer = new DispatcherTimer();
+		renderTimer = new DispatcherTimer
+		{
+			Interval = TimeSpan.FromMilliseconds(0)
+		};
 		
 		renderTimer.Tick += (s, e) => Render();
 		renderTimer.Start();

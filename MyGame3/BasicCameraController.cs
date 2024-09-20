@@ -210,19 +210,22 @@ namespace MyGame3
                 if (Input.HasMouse)
                 {
                     // Rotate with mouse
-                    if (Input.IsMouseButtonDown(MouseButton.Right))
+                    if (Input.IsMouseButtonPressed(MouseButton.Right))
                     {
                         Input.LockMousePosition();
                         Game.IsMouseVisible = false;
-
-                        yaw -= Input.MouseDelta.X * MouseRotationSpeed.X;
-                        pitch -= Input.MouseDelta.Y * MouseRotationSpeed.Y;
                     }
-                    else
+                    else if(Input.IsMouseButtonReleased(MouseButton.Right))
                     {
                         Input.UnlockMousePosition();
                         Game.IsMouseVisible = true;
                     }
+
+                    if(Input.IsMouseButtonDown(MouseButton.Right))
+					{
+						yaw -= Input.MouseDelta.X * MouseRotationSpeed.X;
+						pitch -= Input.MouseDelta.Y * MouseRotationSpeed.Y;
+					}
                 }
 
                 // Handle gestures

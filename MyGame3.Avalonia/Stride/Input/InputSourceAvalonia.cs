@@ -18,30 +18,22 @@ internal class InputSourceAvalonia : InputSourceBase
 	private KeyboardAvalonia _keyboard;
 	private MouseAvalonia _mouse;
 
-	private Sdl _sdl;
-
 	public InputSourceAvalonia(Control uiControl)
 	{
-		this._uiControl = uiControl ?? throw new ArgumentNullException(nameof(uiControl));
-
-		_sdl = Sdl.GetApi();
-		_sdl.Init(Sdl.InitGamecontroller);
+		_uiControl = uiControl ?? throw new ArgumentNullException(nameof(uiControl));
 	}
 
 	public override void Initialize(InputManager inputManager)
 	{
-		this._inputManager = inputManager;
+		_inputManager = inputManager;
 
 		// Create the keyboard device
 		_keyboard = new KeyboardAvalonia(this, _uiControl);
 		RegisterDevice(_keyboard);
 
 		// Create and register the mouse device
-		_mouse = new MouseAvalonia(this, _uiControl, _sdl);
+		_mouse = new MouseAvalonia(this, _uiControl);
 		RegisterDevice(_mouse);
-
-		// Avalonia does not have joystick device added/removed events like SDL
-		// So for gamepads, we may need to handle them differently in the future
 	}
 
 	public override void Dispose()

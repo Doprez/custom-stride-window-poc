@@ -1,14 +1,9 @@
 ﻿using Avalonia.Controls;
 using MyGame3.Avalonia.Input;
-using Stride.Engine;
 using Stride.Games;
 using Stride.Graphics;
 using Stride.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyGame3.Avalonia.Stride;
 public class AvaloniaCustomGame : GameCopyTest
@@ -32,7 +27,6 @@ public class AvaloniaCustomGame : GameCopyTest
 
 	protected override void BeginRun()
 	{
-		base.BeginRun();
 		MinimizedMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(1000f / 144);
 		WindowMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(1000f / 144);
 		GraphicsDevice.Presenter.PresentInterval = PresentInterval.Immediate;

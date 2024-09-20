@@ -18,14 +18,11 @@ namespace MyGame3.Avalonia.Input
         private readonly Control uiControl;
         private bool isMousePositionLocked;
         private Point previousPosition;
-        private Sdl sdl;
 
 		private Point relativeCapturedPosition;
 
-		public MouseAvalonia(InputSourceAvalonia source, Control uiControl, Sdl sdl)
+		public MouseAvalonia(InputSourceAvalonia source, Control uiControl)
         {
-            this.sdl = sdl;
-
 			Source = source;
             this.uiControl = uiControl;
 
