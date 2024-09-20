@@ -1,6 +1,10 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.ReactiveUI;
+using Avalonia.Threading;
+using MyGame3.Avalonia.Views;
 using System;
+using System.Threading;
 
 namespace MyGame3.Avalonia;
 
@@ -11,7 +15,7 @@ internal class Program
 	// yet and stuff might break.
 	[STAThread]
 	public static void Main(string[] args) => BuildAvaloniaApp()
-		.StartWithClassicDesktopLifetime(args);
+		.Start(AppMain, args);
 
 	// Avalonia configuration, don't remove; also used by visual designer.
 	public static AppBuilder BuildAvaloniaApp()
@@ -19,4 +23,18 @@ internal class Program
 			.UsePlatformDetect()
 			.LogToTrace()
 			.UseReactiveUI();
+
+	// Application entry point. Avalonia is completely initialized.
+	static void AppMain(Application app, string[] args)
+	{
+		// A cancellation token source that will be 
+		// used to stop the main loop
+		var cts = new CancellationTokenSource();
+
+		// Do your startup code here
+		new MainWindow().Show();
+
+		// Start the main loop
+		Dispatcher.UIThread.MainLoop(cts.Token);
+	}
 }

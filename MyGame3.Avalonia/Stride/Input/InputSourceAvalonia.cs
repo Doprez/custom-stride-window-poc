@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using Avalonia.Controls;
-using Silk.NET.SDL;
 using Stride.Input;
-using static Stride.Input.VirtualButton;
 
 namespace MyGame3.Avalonia.Input;
 
 /// <summary>
-/// Provides support for keyboard input using Avalonia.
+/// Provides support for keyboard input using Avalonia. must be run on the Avalonia UI thread.
 /// </summary>
 internal class InputSourceAvalonia : InputSourceBase
 {

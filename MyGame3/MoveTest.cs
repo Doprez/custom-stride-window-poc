@@ -22,12 +22,12 @@ public class MoveTest : SyncScript
 		DebugText.Print($"FPS: {Game.UpdateTime.FramePerSecond}", new Int2(10, 10));
 
 		// Do stuff every new frame
-		Entity.Transform.Position.X += 0.01f;
+		Entity.Transform.Position.X += 1f * (float)Game.UpdateTime.Elapsed.TotalSeconds;
 		Physics.UpdatePhysicsTransformation();
 
 		if(Input.IsKeyPressed(Stride.Input.Keys.Tab))
 		{
-			//Game.Window.SetBorderlessWindowFullScreen(!Game.Window.FullscreenIsBorderlessWindow);
+			Game.Window.SetBorderlessWindowFullScreen(!Game.Window.FullscreenIsBorderlessWindow);
 		}
 	}
 }

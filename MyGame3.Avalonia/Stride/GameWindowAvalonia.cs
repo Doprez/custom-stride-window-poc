@@ -8,20 +8,26 @@ using Stride.Core.Mathematics;
 using Stride.Games;
 using Stride.Graphics;
 using System;
+using System.Threading;
 using Point = Stride.Core.Mathematics.Point;
 
 namespace MyGame3.Avalonia.Stride;
 public class GameWindowAvalonia : GameWindow<Control>
 {
 
+	public bool IsRunningOnSeparateThread { get; private set; }
+
 	public override bool Visible
 	{
 		get
 		{
-			//return Dispatcher.UIThread.Invoke(() =>
-			//{
-			//	return (control.GetVisualRoot() as Window)?.IsVisible ?? false;
-			//});
+			if (IsRunningOnSeparateThread)
+			{
+				return Dispatcher.UIThread.Invoke(() =>
+				{
+					return (control.GetVisualRoot() as Window)?.IsVisible ?? false;
+				});
+			}
 			return (control.GetVisualRoot() as Window)?.IsVisible ?? false;
 		}
 		set
@@ -111,11 +117,13 @@ public class GameWindowAvalonia : GameWindow<Control>
 		{
 			if (control.GetVisualRoot() is Window window)
 			{
-				// If UI is running in another thread, use this instead
-				//return Dispatcher.UIThread.Invoke(() =>
-				//{
-				//	return window.WindowState.Equals(WindowState.FullScreen);
-				//});
+				if (IsRunningOnSeparateThread)
+				{
+					return Dispatcher.UIThread.Invoke(() =>
+					{
+						return window.WindowState.Equals(WindowState.FullScreen);
+					});
+				}
 				return window.WindowState.Equals(WindowState.Minimized);
 			}
 			return false;
@@ -128,9 +136,16 @@ public class GameWindowAvalonia : GameWindow<Control>
 		{
 			if (control.GetVisualRoot() is Window window)
 			{
+				if (IsRunningOnSeparateThread)
+				{
+					return Dispatcher.UIThread.Invoke(() =>
+					{
+						return window.IsActive;
+					});
+				}
 				return window.IsActive;
 			}
-			return control.IsFocused;
+			return true;
 		} 
 	}
 	public override WindowHandle NativeWindow { get => windowHandle; }
@@ -147,8 +162,9 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	private DispatcherTimer renderTimer;
 
-	public GameWindowAvalonia(Control control)
+	public GameWindowAvalonia(Control control, bool shouldRunInSeparateThread = true)
 	{
+		IsRunningOnSeparateThread = shouldRunInSeparateThread;
 		GameContext = new GameContextAvalonia(control);
 		Initialize(GameContext);
 	}
@@ -299,15 +315,52 @@ public class GameWindowAvalonia : GameWindow<Control>
 		}
 	}
 
+	private Thread renderThread;
+	private bool isRunning;
+
 	private void StartRendering()
 	{
-		renderTimer = new DispatcherTimer
+		if (IsRunningOnSeparateThread)
 		{
-			Interval = TimeSpan.FromMilliseconds(0)
-		};
-		
-		renderTimer.Tick += (s, e) => Render();
-		renderTimer.Start();
+			isRunning = true;
+			renderThread = new Thread(() =>
+			{
+				// Initialize a stopwatch to control frame rate
+				var stopwatch = new System.Diagnostics.Stopwatch();
+				const double targetFrameTime = 0;
+
+				while (isRunning)
+				{
+					stopwatch.Restart();
+
+					Render();
+
+					stopwatch.Stop();
+					var elapsed = stopwatch.Elapsed.TotalMilliseconds;
+					var sleepTime = targetFrameTime - elapsed;
+
+					if (sleepTime > 0)
+					{
+						Thread.Sleep((int)sleepTime);
+					}
+				}
+			})
+			{
+				IsBackground = true,
+				Name = "StrideRenderThread"
+			};
+			renderThread.Start();
+		}
+		else
+		{
+			renderTimer = new DispatcherTimer
+			{
+				Interval = TimeSpan.FromMilliseconds(0)
+			};
+
+			renderTimer.Tick += (s, e) => Render();
+			renderTimer.Start();
+		}
 	}
 
 	private void StopRendering()

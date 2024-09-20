@@ -20,15 +20,15 @@ public class AvaloniaCustomGame : GameCopyTest
 		base.Initialize();
 
 		// Add the Avalonia input source
-		var input = Services.GetService<InputManager>();
-		var avaloniaInput = new InputSourceAvalonia(_control);
-		input.Sources.Add(avaloniaInput);
+		//var input = Services.GetService<InputManager>();
+		//var avaloniaInput = new InputSourceAvalonia(_control);
+		//input.Sources.Add(avaloniaInput);
 	}
 
 	protected override void BeginRun()
 	{
-		MinimizedMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(1000f / 144);
-		WindowMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(1000f / 144);
+		MinimizedMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(0);
+		WindowMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(0);
 		GraphicsDevice.Presenter.PresentInterval = PresentInterval.Immediate;
 	}
 }
