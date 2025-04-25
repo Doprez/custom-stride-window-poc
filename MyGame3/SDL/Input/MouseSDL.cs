@@ -37,8 +37,9 @@ internal class MouseSDL : MouseDeviceBase, IDisposable
 	public override bool IsPositionLocked => isMousePositionLocked;
 
 	public override IInputSource Source { get; }
+    public override bool IsMouseVisible { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-	public void Dispose()
+    public void Dispose()
 	{
 		uiControl.MouseMoveActions -= OnMouseMoveEvent;
 		uiControl.PointerButtonPressActions -= OnMouseInputEvent;
@@ -90,7 +91,7 @@ internal class MouseSDL : MouseDeviceBase, IDisposable
 
 	private void OnMouseWheelEvent(Silk.NET.SDL.MouseWheelEvent sdlMouseWheelEvent)
 	{
-		var flip = sdlMouseWheelEvent.Direction == (uint)MouseWheelDirection.MousewheelFlipped ? -1 : 1;
+		var flip = sdlMouseWheelEvent.Direction == (uint)MouseWheelDirection.Flipped ? -1 : 1;
 		MouseState.HandleMouseWheel(sdlMouseWheelEvent.Y * flip);
 	}
 

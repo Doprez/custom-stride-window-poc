@@ -60,7 +60,7 @@ public unsafe class SDLWindow : IDisposable
 		{
 			void* parentPtr = parent.ToPointer();
 
-			if (flags.HasFlag(WindowFlags.WindowOpengl))
+			if (flags.HasFlag(WindowFlags.Opengl))
 			{
 				// SDL doesn't create OpenGL context when using SDL_CreateWindowFrom.
 				// See https://wiki.libsdl.org/SDL_CreateWindowFrom

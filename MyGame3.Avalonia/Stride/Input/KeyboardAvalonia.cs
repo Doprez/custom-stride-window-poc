@@ -63,9 +63,6 @@ internal class KeyboardAvalonia : KeyboardDeviceBase, ITextInputDevice, IDisposa
 		{
 			HandleKeyDown(key);
 		}
-
-		// Optional: Mark event as handled to prevent further processing
-		// e.Handled = true;
 	}
 
 	private void OnKeyUp(object sender, KeyEventArgs e)
@@ -75,9 +72,6 @@ internal class KeyboardAvalonia : KeyboardDeviceBase, ITextInputDevice, IDisposa
 		{
 			HandleKeyUp(key);
 		}
-
-		// Optional: Mark event as handled to prevent further processing
-		// e.Handled = true;
 	}
 
 	private void OnTextInput(object sender, TextInputEventArgs e)
@@ -86,9 +80,6 @@ internal class KeyboardAvalonia : KeyboardDeviceBase, ITextInputDevice, IDisposa
 		textInputEvent.Text = e.Text;
 		textInputEvent.Type = TextInputEventType.Input;
 		textEvents.Add(textInputEvent);
-
-		// Optional: Mark event as handled to prevent further processing
-		// e.Handled = true;
 	}
 
 	/// <summary>

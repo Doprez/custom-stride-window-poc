@@ -27,7 +27,7 @@ public class MoveTest : SyncScript
 
 		if(Input.IsKeyPressed(Stride.Input.Keys.Tab))
 		{
-			Game.Window.SetBorderlessWindowFullScreen(!Game.Window.FullscreenIsBorderlessWindow);
+			//Game.Window.SetBorderlessWindowFullScreen(!Game.Window.FullscreenIsBorderlessWindow);
 		}
 	}
 }

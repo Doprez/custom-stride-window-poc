@@ -13,11 +13,6 @@
 
 
   <ItemGroup>
-	<PackageReference Include="Stride.Core.Assets.CompilerApp" Version="4.2.0.1" IncludeAssets="build;buildTransitive" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\MyGame3\MyGame3.csproj" />
   </ItemGroup>
 </Project>

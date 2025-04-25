@@ -28,12 +28,14 @@ public class MinimalGame : GameBase, ISceneRendererContext, IGameSettingsService
 
 	private DatabaseFileProvider databaseFileProvider;
 
-	/// <summary>
-	/// Readonly game settings as defined in the GameSettings asset
-	/// Please note that it will be populated during initialization
-	/// It will be ok to read them after the GameStarted event or after initialization
-	/// </summary>
-	public GameSettings Settings { get; private set; } // for easy transfer from PrepareContext to Initialize
+    public GamePlatform GamePlatform;
+
+    /// <summary>
+    /// Readonly game settings as defined in the GameSettings asset
+    /// Please note that it will be populated during initialization
+    /// It will be ok to read them after the GameStarted event or after initialization
+    /// </summary>
+    public GameSettings Settings { get; private set; } // for easy transfer from PrepareContext to Initialize
 
 	/// <summary>
 	/// Gets the graphics device manager.
@@ -93,6 +95,22 @@ public class MinimalGame : GameBase, ISceneRendererContext, IGameSettingsService
 	/// </summary>
 	public GameProfilingSystem ProfilingSystem { get; }
 
+    /// <summary>
+    /// Gets the abstract window.
+    /// </summary>
+    /// <value>The window.</value>
+    public GameWindow Window
+    {
+        get
+        {
+            if (GamePlatform is IWindowedPlatform windowedPlatform)
+            {
+                return windowedPlatform.MainWindow;
+            }
+            return null;
+        }
+    }
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="MinimalGame"/> class.
 	/// </summary>
@@ -126,9 +144,7 @@ public class MinimalGame : GameBase, ISceneRendererContext, IGameSettingsService
 		Services.AddService(ProfilingSystem);
 
 		// Creates the graphics device manager
-		GraphicsDeviceManager = new GraphicsDeviceManager(this);
-		Services.AddService<IGraphicsDeviceManager>(GraphicsDeviceManager);
-		Services.AddService<IGraphicsDeviceService>(GraphicsDeviceManager);
+		GraphicsDeviceManager = new GraphicsDeviceManager(Services);
 	}
 
 	/// <inheritdoc/>
@@ -174,10 +190,10 @@ public class MinimalGame : GameBase, ISceneRendererContext, IGameSettingsService
 	public override void ConfirmRenderingSettings(bool gameCreation)
 	{
 		var deviceManager = (GraphicsDeviceManager)graphicsDeviceManager;
-		//if our device width or height is actually smaller then requested we use the device one
-		deviceManager.PreferredBackBufferWidth = Context.RequestedWidth = Math.Min(deviceManager.PreferredBackBufferWidth, Window.ClientBounds.Width);
-		deviceManager.PreferredBackBufferHeight = Context.RequestedHeight = Math.Min(deviceManager.PreferredBackBufferHeight, Window.ClientBounds.Height);
-	}
+        //if our device width or height is actually smaller then requested we use the device one
+        deviceManager.PreferredBackBufferWidth = Math.Min(deviceManager.PreferredBackBufferWidth, Window.ClientBounds.Width);
+        deviceManager.PreferredBackBufferHeight = Math.Min(deviceManager.PreferredBackBufferHeight, Window.ClientBounds.Height);
+    }
 
 	protected override void Initialize()
 	{

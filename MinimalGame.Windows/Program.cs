@@ -1,7 +1,6 @@
-﻿using MyGame3;
-using Stride.Engine;
+﻿using Stride.Engine;
 using Stride.Games;
 
-using var game = new Game();
+using var game = new DefaultGame();
 
-game.Run(GameContextFactory.NewGameContextSDL());
+game.Run();

@@ -213,12 +213,12 @@ namespace MyGame3
                     if (Input.IsMouseButtonPressed(MouseButton.Right))
                     {
                         Input.LockMousePosition();
-                        Game.IsMouseVisible = false;
+                        //Game.IsMouseVisible = false;
                     }
                     else if(Input.IsMouseButtonReleased(MouseButton.Right))
                     {
                         Input.UnlockMousePosition();
-                        Game.IsMouseVisible = true;
+                        //Game.IsMouseVisible = true;
                     }
 
                     if(Input.IsMouseButtonDown(MouseButton.Right))

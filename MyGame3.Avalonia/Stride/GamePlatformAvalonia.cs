@@ -1,58 +1,32 @@
 ﻿using System;
+using System.Collections.Generic;
 using MyGame3.Avalonia.Stride;
+using Stride.Core;
 using Stride.Graphics;
 
 namespace Stride.Games
 {
-	public class GamePlatformAvalonia : GamePlatform
-	{
+    public class GamePlatformAvalonia : GamePlatform, IWindowedPlatform, IGraphicsDeviceFactory
+    {
 
 		private bool hasExitRan = false;
 
-		public GamePlatformAvalonia()
+        public event EventHandler<EventArgs> WindowCreated;
+
+        public GamePlatformAvalonia(IServiceRegistry services, GameContextAvalonia context)
 			: base()
 		{
-
-		}
+            Services = services;
+            MainWindow = new GameWindowAvalonia(context, false);
+        }
 
 		public override string DefaultAppDirectory => AppDomain.CurrentDomain.BaseDirectory;
 
-		public override GameWindow CreateWindow(GameContext gameContext)
+        public GameWindow MainWindow { get; protected set; }
+
+        public override GraphicsDevice CreateDevice(GraphicsDeviceInformation deviceInformation)
 		{
-			if(gameContext is GameContextAvalonia avaloniaContext)
-			{
-				return new GameWindowAvalonia(avaloniaContext.Control);
-			}
-
-			throw new ArgumentException("GameContext must be of type GameContextAvalonia");
-		}
-
-		public override GameWindow GetSupportedGameWindow(AppContextType contextType)
-		{
-			// I dont currently care about the context type but I might in the future
-			return null;
-		}
-
-		public new void Run(GameContext gameContext)
-		{
-			gameWindow = CreateWindow(gameContext);
-
-			// Register event handlers
-			gameWindow.Activated += OnActivated;
-			gameWindow.Deactivated += OnDeactivated;
-			gameWindow.InitCallback = OnInitCallback;
-			gameWindow.RunCallback = OnRunCallback;
-			//gameWindow.ExitCallback = OnExiting;
-
-			//WindowCreated?.Invoke(this, EventArgs.Empty);
-
-			// Start the game window
-			gameWindow.Run();
-		}
-
-		public override GraphicsDevice CreateDevice(GraphicsDeviceInformation deviceInformation)
-		{
-			var graphicsDevice = GraphicsDevice.New(deviceInformation.Adapter, deviceInformation.DeviceCreationFlags, gameWindow.NativeWindow, deviceInformation.GraphicsProfile);
+			var graphicsDevice = GraphicsDevice.New(deviceInformation.Adapter, deviceInformation.DeviceCreationFlags, MainWindow.NativeWindow, deviceInformation.GraphicsProfile);
 			graphicsDevice.ColorSpace = deviceInformation.PresentationParameters.ColorSpace;
 			graphicsDevice.Presenter = new SwapChainGraphicsPresenter(graphicsDevice, deviceInformation.PresentationParameters);
 
@@ -62,13 +36,13 @@ namespace Stride.Games
 		public override void RecreateDevice(GraphicsDevice currentDevice, GraphicsDeviceInformation deviceInformation)
 		{
 			currentDevice.ColorSpace = deviceInformation.PresentationParameters.ColorSpace;
-			currentDevice.Recreate(deviceInformation.Adapter ?? GraphicsAdapterFactory.Default, new[] { deviceInformation.GraphicsProfile }, deviceInformation.DeviceCreationFlags, gameWindow.NativeWindow);
+			currentDevice.Recreate(deviceInformation.Adapter ?? GraphicsAdapterFactory.Default, new[] { deviceInformation.GraphicsProfile }, deviceInformation.DeviceCreationFlags, MainWindow.NativeWindow);
 		}
 
 		public override void DeviceChanged(GraphicsDevice currentDevice, GraphicsDeviceInformation deviceInformation)
 		{
-			// Resize the game window if necessary
-			gameWindow.Resize(deviceInformation.PresentationParameters.BackBufferWidth, deviceInformation.PresentationParameters.BackBufferHeight);
+            // Resize the game window if necessary
+            MainWindow.Resize(deviceInformation.PresentationParameters.BackBufferWidth, deviceInformation.PresentationParameters.BackBufferHeight);
 		}
 
 		public override GraphicsDevice ChangeOrCreateDevice(GraphicsDevice currentDevice, GraphicsDeviceInformation deviceInformation)
@@ -87,44 +61,77 @@ namespace Stride.Games
 			return currentDevice;
 		}
 
-		private void OnRunCallback()
-		{
-			try
-			{
-				Tick();
-			}
-			catch (Exception e)
-			{
-				game.Exit();
-			}
-		}
-
-		private void OnInitCallback()
-		{
-			try
-			{
-				game.InitializeBeforeRun();
-			}
-			catch (Exception e)
-			{
-				game.Exit();
-			}
-		}
-
-		private void Tick()
-		{
-			game.Tick();
-
-			if (!IsBlockingRun && game.IsExiting && !hasExitRan)
-			{
-				hasExitRan = true;
-				OnExiting(this, EventArgs.Empty);
-			}
-		}
-
 		protected override void Destroy()
 		{
 			base.Destroy();
 		}
-	}
+
+        public override List<GraphicsDeviceInformation> FindBestDevices(GameGraphicsParameters preferredParameters)
+        {
+            var graphicsDeviceInfos = new List<GraphicsDeviceInformation>();
+
+            // Iterate on each adapter
+            foreach (var graphicsAdapter in GraphicsAdapterFactory.Adapters)
+            {
+                if (!string.IsNullOrEmpty(preferredParameters.RequiredAdapterUid) && graphicsAdapter.AdapterUid != preferredParameters.RequiredAdapterUid) continue;
+
+                // Skip adapters that don't have graphics output 
+                // but only if no RequiredAdapterUid is provided (OculusVR at init time might be in a device with no outputs)
+                if (graphicsAdapter.Outputs.Length == 0 && string.IsNullOrEmpty(preferredParameters.RequiredAdapterUid))
+                {
+                    continue;
+                }
+
+                var preferredGraphicsProfiles = preferredParameters.PreferredGraphicsProfile;
+
+                // Iterate on each preferred graphics profile
+                foreach (var featureLevel in preferredGraphicsProfiles)
+                {
+                    // Check if this profile is supported.
+                    if (graphicsAdapter.IsProfileSupported(featureLevel))
+                    {
+                        var deviceInfo = new GraphicsDeviceInformation
+                        {
+                            Adapter = graphicsAdapter,
+                            GraphicsProfile = featureLevel,
+                            PresentationParameters =
+                            {
+                                MultisampleCount = preferredParameters.PreferredMultisampleCount,
+                                IsFullScreen = preferredParameters.IsFullScreen,
+                                PreferredFullScreenOutputIndex = preferredParameters.PreferredFullScreenOutputIndex,
+                                PresentationInterval = preferredParameters.SynchronizeWithVerticalRetrace ? PresentInterval.One : PresentInterval.Immediate,
+                                DeviceWindowHandle = MainWindow.NativeWindow,
+                                ColorSpace = preferredParameters.ColorSpace,
+                            },
+                        };
+
+                        var preferredMode = new DisplayMode(preferredParameters.PreferredBackBufferFormat,
+                            preferredParameters.PreferredBackBufferWidth,
+                            preferredParameters.PreferredBackBufferHeight,
+                            preferredParameters.PreferredRefreshRate);
+
+                        // if we want to switch to fullscreen, try to find only needed output, otherwise check them all
+                        if (preferredParameters.IsFullScreen)
+                        {
+                            if (preferredParameters.PreferredFullScreenOutputIndex < graphicsAdapter.Outputs.Length)
+                            {
+                                var output = graphicsAdapter.Outputs[preferredParameters.PreferredFullScreenOutputIndex];
+                                var displayMode = output.FindClosestMatchingDisplayMode(preferredGraphicsProfiles, preferredMode);
+                                AddDevice(displayMode, deviceInfo, preferredParameters, graphicsDeviceInfos);
+                            }
+                        }
+                        else
+                        {
+                            AddDevice(preferredMode, deviceInfo, preferredParameters, graphicsDeviceInfos);
+                        }
+
+                        // If the profile is supported, we are just using the first best one
+                        break;
+                    }
+                }
+            }
+
+            return graphicsDeviceInfos;
+        }
+    }
 }

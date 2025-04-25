@@ -46,6 +46,7 @@ namespace MyGame3.Avalonia.Input
         public override bool IsPositionLocked => isMousePositionLocked;
 
         public override IInputSource Source { get; }
+        public override bool IsMouseVisible { get; set; }
 
         public void Dispose()
         {

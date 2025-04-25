@@ -10,33 +10,33 @@ using System.Threading.Tasks;
 namespace MyGame3.Avalonia;
 public class StrideGameRunner
 {
-	private Thread gameThread;
-	private bool isRunning;
-	private GameBase gameInstance;
-	private GameContext gameContext;
+	private Thread _gameThread;
+	private bool _isRunning;
+	private GameBase _gameInstance;
+	private GameContext _gameContext;
 
 	public StrideGameRunner(GameBase game, GameContext context)
 	{
-		gameContext = context;
-		gameInstance = game;
-		isRunning = true;
-		gameThread = new Thread(GameLoop)
+		_gameContext = context;
+		_gameInstance = game;
+		_isRunning = true;
+		_gameThread = new Thread(GameLoop)
 		{
 			IsBackground = true,
 			Name = "StrideGameThread"
 		};
-		gameThread.Start();
+		_gameThread.Start();
 	}
 
 	private void GameLoop()
 	{
 		// Update and render the game
-		gameInstance.Run(gameContext);
+		_gameInstance.Run();
 	}
 
 	public void Stop()
 	{
-		isRunning = false;
-		gameThread.Join();
+		_isRunning = false;
+		_gameThread.Join();
 	}
 }

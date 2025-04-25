@@ -12,6 +12,7 @@ using Stride.Engine;
 using Stride.Engine.Design;
 using Stride.Engine.Processors;
 using Stride.Games;
+using Stride.Games.Systems;
 using Stride.Graphics;
 using Stride.Graphics.Font;
 using Stride.Input;
@@ -22,6 +23,7 @@ using Stride.Rendering.Sprites;
 using Stride.Shaders.Compiler;
 using Stride.Streaming;
 using Stride.VirtualReality;
+using static Stride.Graphics.GeometricPrimitives.GeometricPrimitive;
 
 namespace MyGame3;
 public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsService
@@ -42,18 +44,23 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 
 	private DatabaseFileProvider databaseFileProvider;
 
-	/// <summary>
-	/// Readonly game settings as defined in the GameSettings asset
-	/// Please note that it will be populated during initialization
-	/// It will be ok to read them after the GameStarted event or after initialization
-	/// </summary>
-	public GameSettings Settings { get; private set; } // for easy transfer from PrepareContext to Initialize
+    /// <summary>
+    /// Occurs when [window created].
+    /// </summary>
+    public event EventHandler<EventArgs> WindowCreated;
+
+    /// <summary>
+    /// Readonly game settings as defined in the GameSettings asset
+    /// Please note that it will be populated during initialization
+    /// It will be ok to read them after the GameStarted event or after initialization
+    /// </summary>
+    public GameSettings Settings { get; private set; } // for easy transfer from PrepareContext to Initialize
 
 	/// <summary>
 	/// Gets the graphics device manager.
 	/// </summary>
 	/// <value>The graphics device manager.</value>
-	public GraphicsDeviceManager GraphicsDeviceManager { get; internal set; }
+	public GraphicsDeviceComponent GraphicsDeviceManager { get; internal set; }
 
 	/// <summary>
 	/// Gets the script system.
@@ -112,12 +119,28 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 	/// </summary>
 	public VRDeviceSystem VRDeviceSystem { get; }
 
-	/// <summary>
-	/// Gets the font system.
-	/// </summary>
-	/// <value>The font system.</value>
-	/// <exception cref="System.InvalidOperationException">The font system is not initialized yet</exception>
-	public IFontFactory Font
+    /// <summary>
+    /// Gets the abstract window.
+    /// </summary>
+    /// <value>The window.</value>
+    public GameWindow Window
+    {
+        get
+        {
+            if (GamePlatform is IWindowedPlatform windowedPlatform)
+            {
+                return windowedPlatform.MainWindow;
+            }
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the font system.
+    /// </summary>
+    /// <value>The font system.</value>
+    /// <exception cref="System.InvalidOperationException">The font system is not initialized yet</exception>
+    public IFontFactory Font
 	{
 		get
 		{
@@ -182,17 +205,27 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 	/// <summary>
 	/// Initializes a new instance of the <see cref="Game"/> class.
 	/// </summary>
-	public GameCopyTest(GamePlatform gamePlatform) : base(gamePlatform)
+	public GameCopyTest(GamePlatform gamePlatform)
 	{
-		// Register the logger backend before anything else
-		logListener = GetLogListener();
+        // Register the logger backend before anything else
+        logListener = GetLogListener();
 
 		if (logListener != null)
 			GlobalLogger.GlobalMessageLogged += logListener;
 
-		// Create all core services, except Input which is created during `Initialize'.
-		// Registration takes place in `Initialize'.
-		Script = new ScriptSystem(Services);
+		GamePlatform = gamePlatform;
+
+        Services.AddService(gamePlatform);
+
+        if (gamePlatform is IWindowedPlatform windowedPlatform)
+        {
+            windowedPlatform.WindowCreated += GamePlatformOnWindowCreated;
+            Services.AddService(windowedPlatform);
+        }
+
+        // Create all core services, except Input which is created during `Initialize'.
+        // Registration takes place in `Initialize'.
+        Script = new ScriptSystem(Services);
 		Services.AddService(Script);
 
 		SceneSystem = new SceneSystem(Services);
@@ -220,12 +253,14 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 		VRDeviceSystem = new VRDeviceSystem(Services);
 		Services.AddService(VRDeviceSystem);
 
-		// Creates the graphics device manager
-		GraphicsDeviceManager = new GraphicsDeviceManager(this);
-		Services.AddService<IGraphicsDeviceManager>(GraphicsDeviceManager);
-		Services.AddService<IGraphicsDeviceService>(GraphicsDeviceManager);
+        // Creates the graphics device manager
+		Services.AddService<IGraphicsDeviceFactory>(gamePlatform);
+        Services.AddService<IGamePlatform>(gamePlatform);
 
-		AutoLoadDefaultSettings = true;
+        GraphicsDeviceManager = new GraphicsDeviceComponent();
+        Components.Add(GraphicsDeviceManager);
+
+        AutoLoadDefaultSettings = true;
 	}
 
 	/// <inheritdoc/>
@@ -239,91 +274,98 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 
 		if (logListener != null)
 			GlobalLogger.GlobalMessageLogged -= logListener;
-	}
+    }
 
-	/// <inheritdoc/>
-	protected override void PrepareContext()
-	{
-		base.PrepareContext();
+    /// <inheritdoc/>
+    protected override void PrepareContext()
+    {
+        base.PrepareContext();
 
-		// Init assets
-		if (Context.InitializeDatabase)
-		{
-			databaseFileProvider = InitializeAssetDatabase();
-			((DatabaseFileProviderService)Services.GetService<IDatabaseFileProviderService>()).FileProvider = databaseFileProvider;
+        // Init assets
+        databaseFileProvider = InitializeAssetDatabase();
+        ((DatabaseFileProviderService)Services.GetService<IDatabaseFileProviderService>()).FileProvider = databaseFileProvider;
 
-			var renderingSettings = new RenderingSettings();
-			if (Content.Exists(GameSettings.AssetUrl))
-			{
-				Settings = Content.Load<GameSettings>(GameSettings.AssetUrl);
+        var renderingSettings = new RenderingSettings();
+        if (Content.Exists(GameSettings.AssetUrl))
+        {
+            Settings = Content.Load<GameSettings>(GameSettings.AssetUrl);
 
-				renderingSettings = Settings.Configurations.Get<RenderingSettings>();
+            renderingSettings = Settings.Configurations.Get<RenderingSettings>();
 
-				// Set ShaderProfile even if AutoLoadDefaultSettings is false (because that is what shaders in effect logs are compiled against, even if actual instantiated profile is different)
-				if (renderingSettings.DefaultGraphicsProfile > 0)
-				{
-					var deviceManager = (GraphicsDeviceManager)graphicsDeviceManager;
-					if (!deviceManager.ShaderProfile.HasValue)
-						deviceManager.ShaderProfile = renderingSettings.DefaultGraphicsProfile;
-				}
+            // Set ShaderProfile even if AutoLoadDefaultSettings is false (because that is what shaders in effect logs are compiled against, even if actual instantiated profile is different)
+            if (renderingSettings.DefaultGraphicsProfile > 0)
+            {
+                var deviceManager = GraphicsDeviceManager;
+                if (!deviceManager.ShaderProfile.HasValue)
+                    deviceManager.ShaderProfile = renderingSettings.DefaultGraphicsProfile;
+            }
 
-				Services.AddService<IGameSettingsService>(this);
-			}
+            Services.AddService<IGameSettingsService>(this);
+        }
 
-			// Load several default settings
-			if (AutoLoadDefaultSettings)
-			{
-				var deviceManager = (GraphicsDeviceManager)graphicsDeviceManager;
-				if (renderingSettings.DefaultGraphicsProfile > 0)
-				{
-					deviceManager.PreferredGraphicsProfile = new[] { renderingSettings.DefaultGraphicsProfile };
-				}
+        // Load several default settings
+        if (AutoLoadDefaultSettings)
+        {
+            var deviceManager = GraphicsDeviceManager;
+            if (renderingSettings.DefaultGraphicsProfile > 0)
+            {
+                deviceManager.PreferredGraphicsProfile = [renderingSettings.DefaultGraphicsProfile];
+            }
 
-				if (renderingSettings.DefaultBackBufferWidth > 0) deviceManager.PreferredBackBufferWidth = renderingSettings.DefaultBackBufferWidth;
-				if (renderingSettings.DefaultBackBufferHeight > 0) deviceManager.PreferredBackBufferHeight = renderingSettings.DefaultBackBufferHeight;
+            if (renderingSettings.DefaultBackBufferWidth > 0) deviceManager.PreferredBackBufferWidth = renderingSettings.DefaultBackBufferWidth;
+            if (renderingSettings.DefaultBackBufferHeight > 0) deviceManager.PreferredBackBufferHeight = renderingSettings.DefaultBackBufferHeight;
 
-				deviceManager.PreferredColorSpace = renderingSettings.ColorSpace;
-				SceneSystem.InitialSceneUrl = Settings?.DefaultSceneUrl;
-				SceneSystem.InitialGraphicsCompositorUrl = Settings?.DefaultGraphicsCompositorUrl;
-				SceneSystem.SplashScreenUrl = Settings?.SplashScreenUrl;
-				SceneSystem.SplashScreenColor = Settings?.SplashScreenColor ?? Color4.Black;
-				SceneSystem.DoubleViewSplashScreen = Settings?.DoubleViewSplashScreen ?? false;
-			}
-		}
-	}
+            deviceManager.PreferredColorSpace = renderingSettings.ColorSpace;
+            SceneSystem.InitialSceneUrl = Settings?.DefaultSceneUrl;
+            SceneSystem.InitialGraphicsCompositorUrl = Settings?.DefaultGraphicsCompositorUrl;
+            SceneSystem.SplashScreenUrl = Settings?.SplashScreenUrl;
+            SceneSystem.SplashScreenColor = Settings?.SplashScreenColor ?? Color4.Black;
+            SceneSystem.DoubleViewSplashScreen = Settings?.DoubleViewSplashScreen ?? false;
+        }
+    }
 
-	public override void ConfirmRenderingSettings(bool gameCreation)
-	{
-		if (!AutoLoadDefaultSettings) return;
+    private void GamePlatformOnWindowCreated(object sender, EventArgs eventArgs)
+    {
+        OnWindowCreated();
+    }
 
-		var renderingSettings = Settings?.Configurations.Get<RenderingSettings>();
+    protected void OnWindowCreated()
+    {
+        WindowCreated?.Invoke(this, EventArgs.Empty);
+    }
 
-		var deviceManager = (GraphicsDeviceManager)graphicsDeviceManager;
+    public override void ConfirmRenderingSettings(bool gameCreation)
+    {
+        if (!AutoLoadDefaultSettings) return;
 
-		if (gameCreation)
-		{
-			//if our device width or height is actually smaller then requested we use the device one
-			deviceManager.PreferredBackBufferWidth = Context.RequestedWidth = Math.Min(deviceManager.PreferredBackBufferWidth, Window.ClientBounds.Width);
-			deviceManager.PreferredBackBufferHeight = Context.RequestedHeight = Math.Min(deviceManager.PreferredBackBufferHeight, Window.ClientBounds.Height);
-		}
+        var renderingSettings = Settings?.Configurations.Get<RenderingSettings>();
 
-		//these might get triggered even during game runtime, resize, orientation change
-		if (renderingSettings != null && renderingSettings.AdaptBackBufferToScreen)
-		{
-			var deviceAr = Window.ClientBounds.Width / (float)Window.ClientBounds.Height;
+        var deviceManager = GraphicsDeviceManager;
 
-			if (deviceManager.PreferredBackBufferHeight > deviceManager.PreferredBackBufferWidth)
-			{
-				deviceManager.PreferredBackBufferWidth = Context.RequestedWidth = (int)(deviceManager.PreferredBackBufferHeight * deviceAr);
-			}
-			else
-			{
-				deviceManager.PreferredBackBufferHeight = Context.RequestedHeight = (int)(deviceManager.PreferredBackBufferWidth / deviceAr);
-			}
-		}
-	}
+        if (gameCreation)
+        {
+            //if our device width or height is actually smaller then requested we use the device one
+            deviceManager.PreferredBackBufferWidth = Math.Min(deviceManager.PreferredBackBufferWidth, Window.ClientBounds.Width);
+            deviceManager.PreferredBackBufferHeight = Math.Min(deviceManager.PreferredBackBufferHeight, Window.ClientBounds.Height);
+        }
 
-	protected override void Initialize()
+        //these might get triggered even during game runtime, resize, orientation change
+        if (renderingSettings != null && renderingSettings.AdaptBackBufferToScreen)
+        {
+            var deviceAr = Window.ClientBounds.Width / (float)Window.ClientBounds.Height;
+
+            if (deviceManager.PreferredBackBufferHeight > deviceManager.PreferredBackBufferWidth)
+            {
+                deviceManager.PreferredBackBufferWidth = (int)(deviceManager.PreferredBackBufferHeight * deviceAr);
+            }
+            else
+            {
+                deviceManager.PreferredBackBufferHeight = (int)(deviceManager.PreferredBackBufferWidth / deviceAr);
+            }
+        }
+    }
+
+    protected override void Initialize()
 	{
 		// ---------------------------------------------------------
 		// Add common GameSystems - Adding order is important
@@ -382,7 +424,7 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 		GameSystems.Add(VRDeviceSystem);
 
 		// TODO: data-driven?
-		Content.Serializer.RegisterSerializer(new ImageSerializer());
+		// Content.Serializer.RegisterSerializer(new ImageSerializer());
 
 		OnGameStarted(this);
 	}
@@ -402,7 +444,62 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 		}
 	}
 
-	private void DestroyAssetDatabase()
+
+
+    /// <summary>
+    /// Call this method to initialize the game, begin running the game loop, and start processing events for the game.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException">Cannot run this instance while it is already running</exception>
+    protected override void RunInit()
+    {
+        if (IsRunning)
+        {
+            throw new InvalidOperationException("Cannot run this instance while it is already running");
+        }
+
+        // Gets the graphics device manager
+        graphicsDeviceManager = Services.GetService<IGraphicsDeviceManager>();
+        ArgumentNullException.ThrowIfNull(graphicsDeviceManager, nameof(graphicsDeviceManager));
+
+        PrepareContext();
+
+        try
+        {
+            Window.CreateWindow(600, 900);
+            Window.SetSize(new Int2(600, 900));
+
+            // Register on Activated
+            Window.Activated += OnActivated;
+            Window.Deactivated += OnDeactivated;
+            Window.InitCallback = OnInitCallback;
+            Window.RunCallback = OnRunCallback;
+
+            WindowCreated?.Invoke(this, EventArgs.Empty);
+
+            // Handles the game loop.
+            Window.Run();
+
+            if (GamePlatform.IsBlockingRun)
+            {
+                // If the previous call was blocking, then we can call Endrun
+                EndRun();
+            }
+            else
+            {
+                // EndRun will be executed on Game.Exit
+                isEndRunRequired = true;
+            }
+        }
+        finally
+        {
+            if (!isEndRunRequired)
+            {
+                IsRunning = false;
+            }
+        }
+    }
+
+    private void DestroyAssetDatabase()
 	{
 		if (databaseFileProvider != null)
 		{
@@ -443,16 +540,12 @@ public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsServic
 	/// Loads the content.
 	/// </summary>
 	protected virtual Task LoadContent()
-	{
-		return Task.FromResult(true);
+    {
+        Script.AddTask(LoadContent);
+        return Task.FromResult(true);
 	}
 
-	public override void LoadContentDefault()
-	{
-		base.LoadContentDefault();
-		Script.AddTask(LoadContent);
-	}
-	protected virtual LogListener GetLogListener()
+    protected virtual LogListener GetLogListener()
 	{
 		return new ConsoleLogListener();
 	}

@@ -4,15 +4,20 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using MyGame3.CustomInput;
+using SharpHook;
+using Stride.Core;
 using Stride.Core.Mathematics;
+using Stride.Engine.Processors;
 using Stride.Games;
 using Stride.Graphics;
+using Stride.Input;
 using System;
 using System.Threading;
 using Point = Stride.Core.Mathematics.Point;
 
 namespace MyGame3.Avalonia.Stride;
-public class GameWindowAvalonia : GameWindow<Control>
+public class GameWindowAvalonia : GameWindow
 {
 
 	public bool IsRunningOnSeparateThread { get; private set; }
@@ -61,24 +66,24 @@ public class GameWindowAvalonia : GameWindow<Control>
 		}
 	}
 
-	public override bool IsMouseVisible
-	{
-		get => isMouseVisible;
-		set
-		{
-			if (isMouseVisible != value)
-			{
-				isMouseVisible = value;
-				if (control.GetVisualRoot() is Window window)
-				{
-					Dispatcher.UIThread.Post(() =>
-					{
-						window.Cursor = isMouseVisible ? new Cursor(StandardCursorType.Arrow) : new Cursor(StandardCursorType.None);
-					});
-				}
-			}
-		}
-	}
+	//public override bool IsMouseVisible
+	//{
+	//	get => isMouseVisible;
+	//	set
+	//	{
+	//		if (isMouseVisible != value)
+	//		{
+	//			isMouseVisible = value;
+	//			if (control.GetVisualRoot() is Window window)
+	//			{
+	//				Dispatcher.UIThread.Post(() =>
+	//				{
+	//					window.Cursor = isMouseVisible ? new Cursor(StandardCursorType.Arrow) : new Cursor(StandardCursorType.None);
+	//				});
+	//			}
+	//		}
+	//	}
+	//}
 
 	public override bool AllowUserResizing
 	{
@@ -111,24 +116,25 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 	public override Rectangle ClientBounds { get => new Rectangle(0, 0, (int)control.Bounds.Right, (int)control.Bounds.Bottom); }
 	public override DisplayOrientation CurrentOrientation { get => DisplayOrientation.Default; }
-	public override bool IsMinimized
-	{
-		get
-		{
-			if (control.GetVisualRoot() is Window window)
-			{
-				if (IsRunningOnSeparateThread)
-				{
-					return Dispatcher.UIThread.Invoke(() =>
-					{
-						return window.WindowState.Equals(WindowState.FullScreen);
-					});
-				}
-				return window.WindowState.Equals(WindowState.Minimized);
-			}
-			return false;
-		}
-	}
+
+	//public override bool IsMinimized
+	//{
+	//	get
+	//	{
+	//		if (control.GetVisualRoot() is Window window)
+	//		{
+	//			if (IsRunningOnSeparateThread)
+	//			{
+	//				return Dispatcher.UIThread.Invoke(() =>
+	//				{
+	//					return window.WindowState.Equals(WindowState.FullScreen);
+	//				});
+	//			}
+	//			return window.WindowState.Equals(WindowState.Minimized);
+	//		}
+	//		return false;
+	//	}
+	//}
 
 	public override bool Focused
 	{ 
@@ -150,24 +156,37 @@ public class GameWindowAvalonia : GameWindow<Control>
 	}
 	public override WindowHandle NativeWindow { get => windowHandle; }
 
-	private Control control;
+    public override bool IsMinimized => false;
+
+    private Control control;
 	private WindowHandle windowHandle;
 	private bool isMouseVisible;
-	private bool isMouseCurrentlyHidden;
 	private bool isFullScreenMaximized;
-	private Point savedFormLocation;
 	private bool? deviceChangeWillBeFullScreen;
 	private bool allowUserResizing;
 	private bool isBorderLess;
 
+	//private WindowState savedWindowState;
+	private Size lastClientSize;
+	private PixelPoint lastClientPos;
+
 	private DispatcherTimer renderTimer;
 
-	public GameWindowAvalonia(Control control, bool shouldRunInSeparateThread = true)
+	public GameWindowAvalonia(GameContextAvalonia context, bool shouldRunInSeparateThread = true)
 	{
 		IsRunningOnSeparateThread = shouldRunInSeparateThread;
-		GameContext = new GameContextAvalonia(control);
-		Initialize(GameContext);
-	}
+
+        control = context.Control;
+
+        // Get the native window handle
+        var nativeHandle = GetNativeWindowHandle(control);
+        windowHandle = new WindowHandle(AppContextType.Desktop, control, nativeHandle);
+
+        // Subscribe to control events
+        control.AttachedToVisualTree += OnAttachedToVisualTree;
+        control.DetachedFromVisualTree += OnDetachedFromVisualTree;
+        control.PropertyChanged += OnPropertyChanged;
+    }
 
 	public override void Run()
 	{
@@ -175,48 +194,41 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 		// Start the rendering loop
 		StartRendering();
-
-		// Since Avalonia applications have their own application loop,
-		// we don't need to implement a custom message loop here.
 	}
 
-	private WindowState savedWindowState;
-	private Size lastClientSize;
-	private PixelPoint lastClientPos;
-
-	public override void SetBorderlessWindowFullScreen(bool borderlessFullScreen)
-	{
-		FullscreenIsBorderlessWindow = borderlessFullScreen;
-		if (borderlessFullScreen)
-		{
-			if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-			{
-				var size = desktop.MainWindow.Screens.Primary.Bounds.Size;
-				if (control.GetVisualRoot() is Window window)
-				{
-					lastClientPos = window.Position;
-					window.SystemDecorations = SystemDecorations.None;
-					savedWindowState = window.WindowState;
-					window.WindowState = WindowState.FullScreen;
-					window.Position = new PixelPoint(0, 0);
-					lastClientSize = window.ClientSize;
-					SetSize(new Int2(size.Width, size.Height));
-					window.Topmost = true;
-				}
-			}
-		}
-		else
-		{
-			if (control.GetVisualRoot() is Window window)
-			{
-				window.SystemDecorations = SystemDecorations.Full;
-				window.Position = lastClientPos;
-				window.Width = lastClientSize.Width;
-				window.Height = lastClientSize.Height;
-				window.WindowState = savedWindowState;
-			}
-		}
-	}
+	//public override void SetBorderlessWindowFullScreen(bool borderlessFullScreen)
+	//{
+	//	FullscreenIsBorderlessWindow = borderlessFullScreen;
+	//	if (borderlessFullScreen)
+	//	{
+	//		if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+	//		{
+	//			var size = desktop.MainWindow.Screens.Primary.Bounds.Size;
+	//			if (control.GetVisualRoot() is Window window)
+	//			{
+	//				lastClientPos = window.Position;
+	//				window.SystemDecorations = SystemDecorations.None;
+	//				savedWindowState = window.WindowState;
+	//				window.WindowState = WindowState.FullScreen;
+	//				window.Position = new PixelPoint(0, 0);
+	//				lastClientSize = window.ClientSize;
+	//				SetSize(new Int2(size.Width, size.Height));
+	//				window.Topmost = true;
+	//			}
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (control.GetVisualRoot() is Window window)
+	//		{
+	//			window.SystemDecorations = SystemDecorations.Full;
+	//			window.Position = lastClientPos;
+	//			window.Width = lastClientSize.Width;
+	//			window.Height = lastClientSize.Height;
+	//			window.WindowState = savedWindowState;
+	//		}
+	//	}
+	//}
 
 	private SystemDecorations savedFormBorderStyle;
 	private bool oldVisible;
@@ -279,20 +291,6 @@ public class GameWindowAvalonia : GameWindow<Control>
 
 			deviceChangeWillBeFullScreen = null;
 		}
-	}
-
-	protected override void Initialize(GameContext<Control> gameContext)
-	{
-		control = gameContext.Control;
-
-		// Get the native window handle
-		var nativeHandle = GetNativeWindowHandle(control);
-		windowHandle = new WindowHandle(AppContextType.Desktop, control, nativeHandle);
-
-		// Subscribe to control events
-		//control.AttachedToVisualTree += OnAttachedToVisualTree;
-		//control.DetachedFromVisualTree += OnDetachedFromVisualTree;
-		control.PropertyChanged += OnPropertyChanged;
 	}
 
 	private void OnAttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
@@ -410,11 +408,6 @@ public class GameWindowAvalonia : GameWindow<Control>
 		}
 	}
 
-	public override void SetSupportedOrientations(DisplayOrientation orientations)
-	{
-
-	}
-
 	protected override void SetTitle(string title)
 	{
 		if (control.GetVisualRoot() is Window window)
@@ -422,4 +415,14 @@ public class GameWindowAvalonia : GameWindow<Control>
 			window.Title = title;
 		}
 	}
+
+    public override void CreateWindow(int width, int height)
+    {
+
+    }
+
+    protected override void SetSupportedOrientations(DisplayOrientation orientations)
+    {
+
+    }
 }

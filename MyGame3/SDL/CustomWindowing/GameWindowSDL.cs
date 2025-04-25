@@ -1,411 +1,338 @@
-﻿using System;
-using System.Diagnostics;
-using Silk.NET.SDL;
-using Stride.Core.Mathematics;
-using Stride.Games;
-using Stride.Graphics;
-using DisplayOrientation = Stride.Graphics.DisplayOrientation;
-using Point = Stride.Core.Mathematics.Point;
-using Window = MyGame3.SDL.SDLWindow;
-using FormBorderStyle = MyGame3.SDL.Enums.FormBorderStyle;
-using FormWindowState = MyGame3.SDL.Enums.FormWindowState;
+﻿//using System;
+//using System.Diagnostics;
+//using Silk.NET.SDL;
+//using Stride.Core.Mathematics;
+//using Stride.Games;
+//using Stride.Graphics;
+//using DisplayOrientation = Stride.Graphics.DisplayOrientation;
+//using Point = Stride.Core.Mathematics.Point;
+//using Window = MyGame3.SDL.SDLWindow;
+//using FormBorderStyle = MyGame3.SDL.Enums.FormBorderStyle;
+//using FormWindowState = MyGame3.SDL.Enums.FormWindowState;
+//using Stride.Core;
 
-namespace MyGame3.SDL.CustomWindowing;
+//namespace MyGame3.SDL.CustomWindowing;
 
-/// <summary>
-/// An abstract window.
-/// </summary>
-public class GameWindowSDL : GameWindow<Window>
-{
-	private bool isMouseVisible;
+///// <summary>
+///// An abstract window.
+///// </summary>
+//public class GameWindowSDL : GameWindow
+//{
+//    private bool isMouseVisible;
 
-	private bool isMouseCurrentlyHidden;
+//    private bool isMouseCurrentlyHidden;
 
-	private Window window;
+//    [DataMemberIgnore]
+//    public Window Window { get; private set; }
 
-	private WindowHandle windowHandle;
+//    private WindowHandle windowHandle;
 
-	private bool isFullScreenMaximized;
-	private Point savedFormLocation;
-	private bool? deviceChangeWillBeFullScreen;
+//    private bool isFullScreenMaximized;
+//    private Point savedFormLocation;
+//    private bool? deviceChangeWillBeFullScreen;
 
-	private bool allowUserResizing;
-	private bool isBorderLess;
+//    private bool allowUserResizing;
+//    private bool isBorderLess;
 
-	public GameWindowSDL(string title, int width = 800, int height = 600)
-	{
-		window = new(title);
-		GameContext = new GameContextSDL(window);
+//    public GameWindowSDL()
+//    {
+//    }
 
-		// Setup the initial size of the window
-		if (width == 0)
-		{
-			width = window.ClientSize.Width;
-		}
+//    public override WindowHandle NativeWindow
+//    {
+//        get
+//        {
+//            return windowHandle;
+//        }
+//    }
 
-		if (height == 0)
-		{
-			height = window.ClientSize.Height;
-		}
+//    public override void BeginScreenDeviceChange(bool willBeFullScreen)
+//    {
+//        if (!isFullScreenMaximized && Window != null)
+//        {
+//            savedFormLocation = Window.Location;
+//        }
 
-		windowHandle = new WindowHandle(AppContextType.Desktop, window, window.Handle);
+//        deviceChangeWillBeFullScreen = willBeFullScreen;
+//    }
 
-		window.ClientSize = new Size2(width, height);
+//    public override void EndScreenDeviceChange(int clientWidth, int clientHeight)
+//    {
+//        if (!deviceChangeWillBeFullScreen.HasValue)
+//            return;
 
-		window.MouseEnterActions += WindowOnMouseEnterActions;
-		window.MouseLeaveActions += WindowOnMouseLeaveActions;
+//        isFullScreenMaximized = deviceChangeWillBeFullScreen.Value;
+//        if (Window != null)
+//        {
+//            Window.FullscreenIsBorderlessWindow = FullscreenIsBorderlessWindow;
+//            if (deviceChangeWillBeFullScreen.Value) //windowed to fullscreen
+//            {
+//                Window.ClientSize = new Size2(clientWidth, clientHeight);
+//                Window.IsFullScreen = true;
+//            }
+//            else //fullscreen to windowed or window resize
+//            {
+//                Window.IsFullScreen = false;
+//                Window.ClientSize = new Size2(clientWidth, clientHeight);
+//                Window.Location = savedFormLocation;
+//                UpdateFormBorder();
+//            }
+//            Window.BringToFront();
+//        }
 
-		if (window is GameFormSDL gameForm)
-		{
-			//gameForm.AppActivated += OnActivated;
-			//gameForm.AppDeactivated += OnDeactivated;
-			gameForm.UserResized += OnClientSizeChanged;
-			gameForm.CloseActions += GameForm_CloseActions;
-			gameForm.FullscreenToggle += OnFullscreenToggle;
+//        deviceChangeWillBeFullScreen = null;
+//    }
 
-		}
-		else
-		{
-			window.ResizeEndActions += WindowOnResizeEndActions;
-		}
-	}
+//    public override void CreateWindow(int width, int height)
+//    {
+//        Window = new GameFormSDL();
 
-	public GameWindowSDL(GameContext<Window> gameContext)
-	{
-		Initialize(gameContext);
-	}
+//        // Setup the initial size of the window
+//        if (width == 0)
+//        {
+//            width = Window.ClientSize.Width;
+//        }
 
-	public override WindowHandle NativeWindow
-	{
-		get
-		{
-			return windowHandle;
-		}
-	}
+//        if (height == 0)
+//        {
+//            height = Window.ClientSize.Height;
+//        }
 
-	public override void BeginScreenDeviceChange(bool willBeFullScreen)
-	{
-		if (!isFullScreenMaximized && window != null)
-		{
-			savedFormLocation = window.Location;
-		}
+//        windowHandle = new WindowHandle(AppContextType.Desktop, Window, Window.Handle);
 
-		deviceChangeWillBeFullScreen = willBeFullScreen;
-	}
+//        Window.ClientSize = new Size2(width, height);
 
-	public override void EndScreenDeviceChange(int clientWidth, int clientHeight)
-	{
-		if (!deviceChangeWillBeFullScreen.HasValue)
-			return;
+//        Window.MouseEnterActions += WindowOnMouseEnterActions;
+//        Window.MouseLeaveActions += WindowOnMouseLeaveActions;
 
-		isFullScreenMaximized = deviceChangeWillBeFullScreen.Value;
-		if (window != null)
-		{
-			window.FullscreenIsBorderlessWindow = FullscreenIsBorderlessWindow;
-			if (deviceChangeWillBeFullScreen.Value) //windowed to fullscreen
-			{
-				window.ClientSize = new Size2(clientWidth, clientHeight);
-				window.IsFullScreen = true;
-			}
-			else //fullscreen to windowed or window resize
-			{
-				window.IsFullScreen = false;
-				window.ClientSize = new Size2(clientWidth, clientHeight);
-				window.Location = savedFormLocation;
-				UpdateFormBorder();
-			}
-			window.BringToFront();
-		}
+//        var gameForm = Window as GameFormSDL;
+//        if (gameForm != null)
+//        {
+//            //gameForm.AppActivated += OnActivated;
+//            //gameForm.AppDeactivated += OnDeactivated;
+//            gameForm.UserResized += OnClientSizeChanged;
+//            gameForm.CloseActions += GameForm_CloseActions;
+//            gameForm.FullscreenToggle += OnFullscreenToggle;
 
-		deviceChangeWillBeFullScreen = null;
-	}
+//        }
+//        else
+//        {
+//            Window.ResizeEndActions += WindowOnResizeEndActions;
+//        }
+//    }
 
-	public override void SetSupportedOrientations(DisplayOrientation orientations)
-	{
-		// Desktop doesn't have orientation (unless on Windows 8?)
-	}
+//    private void GameForm_CloseActions()
+//    {
+//        OnClosing(this, new EventArgs());
+//    }
 
-	protected override void Initialize(GameContext<Window> gameContext)
-	{
-		window = gameContext.Control;
+//    public override void Run()
+//    {
+//        Debug.Assert(InitCallback != null, $"{nameof(InitCallback)} is null");
+//        Debug.Assert(RunCallback != null, $"{nameof(RunCallback)} is null");
 
-		// Setup the initial size of the window
-		var width = gameContext.RequestedWidth;
-		if (width == 0)
-		{
-			width = window.ClientSize.Width;
-		}
+//        // Initialize the init callback
+//        InitCallback();
 
-		var height = gameContext.RequestedHeight;
-		if (height == 0)
-		{
-			height = window.ClientSize.Height;
-		}
+//        var runCallback = new SDLMessageLoop.RenderCallback(RunCallback);
+//        // Run the rendering loop
+//        try
+//        {
+//            SDLMessageLoop.Run(Window, () =>
+//            {
+//                if (Exiting)
+//                {
+//                    Destroy();
+//                    return;
+//                }
 
-		windowHandle = new WindowHandle(AppContextType.Desktop, window, window.Handle);
+//                runCallback();
+//            });
+//        }
+//        finally
+//        {
+//            ExitCallback?.Invoke();
+//        }
+//    }
 
-		window.ClientSize = new Size2(width, height);
+//    public override IMessageLoop CreateUserManagedMessageLoop()
+//    {
+//        return new SDLMessageLoop(Window);
+//    }
 
-		window.MouseEnterActions += WindowOnMouseEnterActions;
-		window.MouseLeaveActions += WindowOnMouseLeaveActions;
+//    private void WindowOnMouseEnterActions(WindowEvent sdlWindowEvent)
+//    {
+//        if (!isMouseVisible && !isMouseCurrentlyHidden)
+//        {
+//            Cursor.Hide();
+//            isMouseCurrentlyHidden = true;
+//        }
+//    }
 
-		if (window is GameFormSDL gameForm)
-		{
-			//gameForm.AppActivated += OnActivated;
-			//gameForm.AppDeactivated += OnDeactivated;
-			gameForm.UserResized += OnClientSizeChanged;
-			gameForm.CloseActions += GameForm_CloseActions;
-			gameForm.FullscreenToggle += OnFullscreenToggle;
-		}
-		else
-		{
-			window.ResizeEndActions += WindowOnResizeEndActions;
-		}
-	}
+//    private void WindowOnMouseLeaveActions(WindowEvent sdlWindowEvent)
+//    {
+//        if (isMouseCurrentlyHidden)
+//        {
+//            Cursor.Show();
+//            isMouseCurrentlyHidden = false;
+//        }
+//    }
 
-	private void GameForm_CloseActions()
-	{
-		OnClosing(this, new EventArgs());
-	}
+//    private void WindowOnResizeEndActions(WindowEvent sdlWindowEvent)
+//    {
+//        OnClientSizeChanged(Window, EventArgs.Empty);
+//    }
 
-	public override void Run()
-	{
-		Debug.Assert(InitCallback != null, $"{nameof(InitCallback)} is null");
-		Debug.Assert(RunCallback != null, $"{nameof(RunCallback)} is null");
+//    /// <summary>
+//    /// Gets or sets a value indicating whether this <see cref="GameWindow" /> is visible.
+//    /// </summary>
+//    /// <value><c>true</c> if visible; otherwise, <c>false</c>.</value>
+//    public override bool Visible
+//    {
+//        get
+//        {
+//            return Window.Visible;
+//        }
+//        set
+//        {
+//            Window.Visible = value;
+//        }
+//    }
 
-		// Initialize the init callback
-		InitCallback();
+//    public override Int2 Position
+//    {
+//        get
+//        {
+//            if (Window == null)
+//                return base.Position;
 
-		var context = (GameContextSDL)GameContext;
-		if (context.IsUserManagingRun)
-		{
-			context.RunCallback = RunCallback;
-			context.ExitCallback = ExitCallback;
-		}
-		else
-		{
-			var runCallback = new SDLMessageLoop.RenderCallback(RunCallback);
-			// Run the rendering loop
-			try
-			{
-				SDLMessageLoop.Run(window, () =>
-				{
-					if (Exiting)
-					{
-						Destroy();
-						return;
-					}
-					runCallback();
-				});
-			}
-			finally
-			{
-				ExitCallback?.Invoke();
-			}
-		}
-	}
+//            return new Int2(Window.Location.X, Window.Location.Y);
+//        }
+//        set
+//        {
+//            if (Window != null)
+//                Window.Location = new Point(value.X, value.Y);
 
-	public override IMessageLoop CreateUserManagedMessageLoop()
-	{
-		return new SDLMessageLoop(window);
-	}
+//            base.Position = value;
+//        }
+//    }
 
-	private void WindowOnMouseEnterActions(WindowEvent sdlWindowEvent)
-	{
-		if (!isMouseVisible && !isMouseCurrentlyHidden)
-		{
-			Cursor.Hide();
-			isMouseCurrentlyHidden = true;
-		}
-	}
+//    protected override void SetTitle(string title)
+//    {
+//        if (Window != null)
+//        {
+//            Window.Text = title;
+//        }
+//    }
 
-	private void WindowOnMouseLeaveActions(WindowEvent sdlWindowEvent)
-	{
-		if (isMouseCurrentlyHidden)
-		{
-			Cursor.Show();
-			isMouseCurrentlyHidden = false;
-		}
-	}
+//    public override void Resize(int width, int height)
+//    {
+//        Window.ClientSize = new Size2(width, height);
+//    }
 
-	private void WindowOnResizeEndActions(WindowEvent sdlWindowEvent)
-	{
-		OnClientSizeChanged(window, EventArgs.Empty);
-	}
+//    public override bool AllowUserResizing
+//    {
+//        get
+//        {
+//            return allowUserResizing;
+//        }
+//        set
+//        {
+//            if (Window != null)
+//            {
+//                allowUserResizing = value;
+//                UpdateFormBorder();
+//            }
+//        }
+//    }
 
-	public override bool IsMouseVisible
-	{
-		get
-		{
-			return isMouseVisible;
-		}
-		set
-		{
-			if (isMouseVisible != value)
-			{
-				isMouseVisible = value;
-				if (isMouseVisible)
-				{
-					if (isMouseCurrentlyHidden)
-					{
-						Cursor.Show();
-						isMouseCurrentlyHidden = false;
-					}
-				}
-				else if (!isMouseCurrentlyHidden)
-				{
-					Cursor.Hide();
-					isMouseCurrentlyHidden = true;
-				}
-			}
-		}
-	}
+//    public override bool IsBorderLess
+//    {
+//        get
+//        {
+//            return isBorderLess;
+//        }
+//        set
+//        {
+//            if (isBorderLess != value)
+//            {
+//                isBorderLess = value;
+//                UpdateFormBorder();
+//            }
+//        }
+//    }
 
-	/// <summary>
-	/// Gets or sets a value indicating whether this <see cref="GameWindow" /> is visible.
-	/// </summary>
-	/// <value><c>true</c> if visible; otherwise, <c>false</c>.</value>
-	public override bool Visible
-	{
-		get
-		{
-			return window.Visible;
-		}
-		set
-		{
-			window.Visible = value;
-		}
-	}
+//    private void UpdateFormBorder()
+//    {
+//        if (Window != null)
+//        {
+//            Window.MaximizeBox = allowUserResizing;
+//            Window.FormBorderStyle = isFullScreenMaximized || isBorderLess ? FormBorderStyle.None : allowUserResizing ? FormBorderStyle.Sizable : FormBorderStyle.FixedSingle;
 
-	public override Int2 Position
-	{
-		get
-		{
-			if (window == null)
-				return base.Position;
+//            if (isFullScreenMaximized)
+//            {
+//                Window.TopMost = true;
+//                Window.BringToFront();
+//            }
+//        }
+//    }
 
-			return new Int2(window.Location.X, window.Location.Y);
-		}
-		set
-		{
-			if (window != null)
-				window.Location = new Point(value.X, value.Y);
+//    public override Rectangle ClientBounds
+//    {
+//        get
+//        {
+//            // Ensure width and height are at least 1 to avoid divisions by 0
+//            return new Rectangle(0, 0, Math.Max(Window.ClientSize.Width, 1), Math.Max(Window.ClientSize.Height, 1));
+//        }
+//    }
 
-			base.Position = value;
-		}
-	}
+//    public override DisplayOrientation CurrentOrientation
+//    {
+//        get
+//        {
+//            return DisplayOrientation.Default;
+//        }
+//    }
 
-	protected override void SetTitle(string title)
-	{
-		if (window != null)
-		{
-			window.Text = title;
-		}
-	}
+//    public override bool IsMinimized
+//    {
+//        get
+//        {
+//            if (Window != null)
+//            {
+//                return Window.WindowState == FormWindowState.Minimized;
+//            }
+//            // Check for non-window control
+//            return false;
+//        }
+//    }
 
-	public override void Resize(int width, int height)
-	{
-		window.ClientSize = new Size2(width, height);
-	}
+//    public override bool Focused
+//    {
+//        get
+//        {
+//            if (Window != null)
+//            {
+//                return Window.Focused;
+//            }
+//            // Check for non-window control
+//            return false;
+//        }
+//    }
 
-	public override bool AllowUserResizing
-	{
-		get
-		{
-			return allowUserResizing;
-		}
-		set
-		{
-			if (window != null)
-			{
-				allowUserResizing = value;
-				UpdateFormBorder();
-			}
-		}
-	}
+//    protected override void Destroy()
+//    {
+//        if (Window != null)
+//        {
+//            Window.Dispose();
+//            Window = null;
+//        }
 
-	public override bool IsBorderLess
-	{
-		get
-		{
-			return isBorderLess;
-		}
-		set
-		{
-			if (isBorderLess != value)
-			{
-				isBorderLess = value;
-				UpdateFormBorder();
-			}
-		}
-	}
+//        base.Destroy();
+//    }
 
-	private void UpdateFormBorder()
-	{
-		if (window != null)
-		{
-			window.MaximizeBox = allowUserResizing;
-			window.FormBorderStyle = isFullScreenMaximized || isBorderLess ? FormBorderStyle.None : allowUserResizing ? FormBorderStyle.Sizable : FormBorderStyle.FixedSingle;
+//    protected override void SetSupportedOrientations(DisplayOrientation orientations)
+//    {
 
-			if (isFullScreenMaximized)
-			{
-				window.TopMost = true;
-				window.BringToFront();
-			}
-		}
-	}
-
-	public override Rectangle ClientBounds
-	{
-		get
-		{
-			// Ensure width and height are at least 1 to avoid divisions by 0
-			return new Rectangle(0, 0, Math.Max(window.ClientSize.Width, 1), Math.Max(window.ClientSize.Height, 1));
-		}
-	}
-
-	public override DisplayOrientation CurrentOrientation
-	{
-		get
-		{
-			return DisplayOrientation.Default;
-		}
-	}
-
-	public override bool IsMinimized
-	{
-		get
-		{
-			if (window != null)
-			{
-				return window.WindowState == FormWindowState.Minimized;
-			}
-			// Check for non-window control
-			return false;
-		}
-	}
-
-	public override bool Focused
-	{
-		get
-		{
-			if (window != null)
-			{
-				return window.Focused;
-			}
-			// Check for non-window control
-			return false;
-		}
-	}
-
-	protected override void Destroy()
-	{
-		if (window != null)
-		{
-			window.Dispose();
-			window = null;
-		}
-
-		base.Destroy();
-	}
-}
+//    }
+//}

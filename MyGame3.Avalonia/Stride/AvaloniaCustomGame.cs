@@ -1,5 +1,7 @@
 ﻿using Avalonia.Controls;
 using MyGame3.Avalonia.Input;
+using SharpHook;
+using Stride.Engine.Processors;
 using Stride.Games;
 using Stride.Graphics;
 using Stride.Input;
@@ -9,6 +11,7 @@ namespace MyGame3.Avalonia.Stride;
 public class AvaloniaCustomGame : GameCopyTest
 {
 	private Control _control;
+	private TaskPoolGlobalHook _hook;
 
 	public AvaloniaCustomGame(GamePlatform gamePlatform, Control control) : base(gamePlatform)
 	{
@@ -20,9 +23,10 @@ public class AvaloniaCustomGame : GameCopyTest
 		base.Initialize();
 
 		// Add the Avalonia input source
-		//var input = Services.GetService<InputManager>();
-		//var avaloniaInput = new InputSourceAvalonia(_control);
-		//input.Sources.Add(avaloniaInput);
+		// This only works if the Stride game is running on the same thread as the Avalonia window.
+		var input = Services.GetService<InputManager>();
+		var avaloniaInput = new InputSourceAvalonia(_control);
+		input.Sources.Add(avaloniaInput);
 	}
 
 	protected override void BeginRun()
@@ -31,4 +35,5 @@ public class AvaloniaCustomGame : GameCopyTest
 		WindowMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(0);
 		GraphicsDevice.Presenter.PresentInterval = PresentInterval.Immediate;
 	}
+
 }
