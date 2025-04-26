@@ -32,9 +32,9 @@ internal class Program
 		var cts = new CancellationTokenSource();
 
 		// Do your startup code here
-		new MainWindow().Show();
+		new MainWindow(cts).Show();
 
 		// Start the main loop
 		Dispatcher.UIThread.MainLoop(cts.Token);
-	}
+    }
 }

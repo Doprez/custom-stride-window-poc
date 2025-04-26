@@ -23,7 +23,6 @@ using Stride.Rendering.Sprites;
 using Stride.Shaders.Compiler;
 using Stride.Streaming;
 using Stride.VirtualReality;
-using static Stride.Graphics.GeometricPrimitives.GeometricPrimitive;
 
 namespace MyGame3;
 public class GameCopyTest : GameBase, ISceneRendererContext, IGameSettingsService

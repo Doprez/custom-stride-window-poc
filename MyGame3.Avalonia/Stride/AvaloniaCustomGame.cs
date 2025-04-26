@@ -1,7 +1,6 @@
 ﻿using Avalonia.Controls;
 using MyGame3.Avalonia.Input;
 using SharpHook;
-using Stride.Engine.Processors;
 using Stride.Games;
 using Stride.Graphics;
 using Stride.Input;
@@ -35,5 +34,4 @@ public class AvaloniaCustomGame : GameCopyTest
 		WindowMinimumUpdateRate.MinimumElapsedTime = TimeSpan.FromMilliseconds(0);
 		GraphicsDevice.Presenter.PresentInterval = PresentInterval.Immediate;
 	}
-
 }

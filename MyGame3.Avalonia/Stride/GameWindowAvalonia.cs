@@ -1,20 +1,12 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using MyGame3.CustomInput;
-using SharpHook;
-using Stride.Core;
 using Stride.Core.Mathematics;
-using Stride.Engine.Processors;
 using Stride.Games;
 using Stride.Graphics;
-using Stride.Input;
 using System;
 using System.Threading;
-using Point = Stride.Core.Mathematics.Point;
 
 namespace MyGame3.Avalonia.Stride;
 public class GameWindowAvalonia : GameWindow
