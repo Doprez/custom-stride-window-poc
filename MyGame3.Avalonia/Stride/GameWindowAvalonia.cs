@@ -164,11 +164,11 @@ public class GameWindowAvalonia : GameWindow
 
 	private DispatcherTimer renderTimer;
 
-	public GameWindowAvalonia(GameContextAvalonia context, bool shouldRunInSeparateThread = true)
+	public GameWindowAvalonia(Control context, bool shouldRunInSeparateThread = true)
 	{
 		IsRunningOnSeparateThread = shouldRunInSeparateThread;
 
-        control = context.Control;
+        control = context;
 
         // Get the native window handle
         var nativeHandle = GetNativeWindowHandle(control);

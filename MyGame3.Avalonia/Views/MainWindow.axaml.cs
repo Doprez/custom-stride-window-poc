@@ -10,7 +10,6 @@ namespace MyGame3.Avalonia.Views;
 public partial class MainWindow : Window
 {
 	private GamePlatformAvalonia gamePlatform;
-	private GameContextAvalonia gameContext;
 	private GameBase game;
 
 	private CancellationTokenSource _cancellationTokenSource;
@@ -27,9 +26,8 @@ public partial class MainWindow : Window
 
 	private void OnLoaded(object? sender, RoutedEventArgs e)
 	{
-		gameContext = new GameContextAvalonia(this);
-		gamePlatform = new GamePlatformAvalonia(new ServiceRegistry(), gameContext);
-		game = new AvaloniaCustomGame(gamePlatform, gameContext.Control);
+		gamePlatform = new GamePlatformAvalonia(new ServiceRegistry(), this);
+		game = new AvaloniaCustomGame(gamePlatform, this);
 
 		game.Run();
 	}

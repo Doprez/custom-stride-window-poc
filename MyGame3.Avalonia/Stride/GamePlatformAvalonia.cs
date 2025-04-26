@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Avalonia.Controls;
 using MyGame3.Avalonia.Stride;
 using Stride.Core;
 using Stride.Graphics;
@@ -13,7 +14,7 @@ namespace Stride.Games
 
         public event EventHandler<EventArgs> WindowCreated;
 
-        public GamePlatformAvalonia(IServiceRegistry services, GameContextAvalonia context)
+        public GamePlatformAvalonia(IServiceRegistry services, Control context)
 			: base()
 		{
             Services = services;
